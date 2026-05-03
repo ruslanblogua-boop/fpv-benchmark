@@ -4,7 +4,7 @@
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -34,7 +34,7 @@
 
 .leaflet-control-zoom-in,
 .leaflet-control-zoom-out {
-  color: var(--accent-cyan) !important;
+  color: var(--accent-orange) !important;
   border-bottom: 1px solid var(--border-dim) !important;
 }
 
@@ -78,7 +78,7 @@
 
 .sidebar-header h1 {
   font-size: 18px;
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
   margin-bottom: 0.25rem;
 }
 
@@ -118,7 +118,7 @@
 }
 
 .test-item:hover {
-  border-color: var(--accent-cyan);
+  border-color: var(--accent-orange);
   background: rgba(0, 217, 255, 0.05);
 }
 
@@ -139,15 +139,15 @@
   width: 100%;
   padding: 0.5rem;
   background: var(--bg-darker);
-  border: 1px solid var(--accent-cyan);
-  color: var(--accent-cyan);
+  border: 1px solid var(--accent-orange);
+  color: var(--accent-orange);
   font-size: 12px;
   cursor: pointer;
   border-radius: 3px;
 }
 
 .test-select:hover {
-  background: var(--accent-cyan);
+  background: var(--accent-orange);
   color: var(--bg-dark);
 }
 
@@ -158,7 +158,7 @@
 .metric-picker h3 {
   margin-bottom: 0.75rem;
   font-size: 14px;
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
 }
 
 .metric-options {
@@ -205,7 +205,7 @@
 
 #test-info h3 {
   font-size: 14px;
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
   margin-bottom: 0.75rem;
 }
 
@@ -246,7 +246,7 @@
 #playback-time {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
   width: 40px;
   text-align: right;
 }
@@ -291,7 +291,7 @@
 }
 
 .step.active {
-  background: var(--accent-cyan);
+  background: var(--accent-orange);
   color: var(--bg-dark);
   font-weight: 600;
 }
@@ -305,7 +305,7 @@
 }
 
 .step-content h2 {
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
   margin-bottom: 1rem;
   font-size: 20px;
 }
@@ -444,9 +444,9 @@
 }
 
 .tab.active {
-  background: var(--accent-cyan);
+  background: var(--accent-orange);
   color: var(--bg-dark);
-  border-color: var(--accent-cyan);
+  border-color: var(--accent-orange);
 }
 
 /* Multi-system input */
@@ -472,16 +472,16 @@
   gap: 0.5rem;
   padding: 0.35rem 0.75rem;
   background: rgba(0, 217, 255, 0.15);
-  border: 1px solid var(--accent-cyan);
+  border: 1px solid var(--accent-orange);
   border-radius: 4px;
   font-size: 12px;
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
 }
 
 .system-tag button {
   background: none;
   border: none;
-  color: var(--accent-cyan);
+  color: var(--accent-orange);
   cursor: pointer;
   padding: 0;
   margin: 0;
@@ -510,13 +510,13 @@
 
 .systems-add input:focus {
   outline: none;
-  border-color: var(--accent-cyan);
+  border-color: var(--accent-orange);
 }
 
 .btn-small {
   padding: 0.5rem 1rem;
   font-size: 12px;
-  background: var(--accent-cyan);
+  background: var(--accent-orange);
   color: var(--bg-dark);
   border: none;
   border-radius: 4px;

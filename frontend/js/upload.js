@@ -50,18 +50,21 @@ class UploadWizard {
     document.getElementById('step-3-next').addEventListener('click', () => this.nextStep());
     document.getElementById('profile').addEventListener('change', (e) => this.onProfileChange(e));
     document.getElementById('track').addEventListener('change', (e) => this.onTrackChange(e));
-    document.getElementById('system-add-btn').addEventListener('click', () => this.addSystem());
-    document.getElementById('system-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        this.addSystem();
-      }
-    });
+
+    // System modal
+    document.getElementById('add-system-btn').addEventListener('click', () => this.openSystemModal());
+    document.getElementById('system-type').addEventListener('change', (e) => this.onSystemTypeChange(e));
+    document.getElementById('system-modal-add').addEventListener('click', () => this.addSystemFromModal());
+    document.getElementById('system-modal-cancel').addEventListener('click', () => this.closeSystemModal());
 
     // Step 4: Preview & submit
     document.getElementById('step-4-back').addEventListener('click', () => this.prevStep());
     document.getElementById('publish-draft').addEventListener('click', () => this.publishDraft());
     document.getElementById('publish-live').addEventListener('click', () => this.publishLive());
+
+    // Load saved systems
+    this.systems = systemManager.getAllSystems();
+    this.renderSystems();
   }
 
   onHeatmapFileSelect(e) {
@@ -134,18 +137,48 @@ class UploadWizard {
     this.updateTestName();
   }
 
-  addSystem() {
-    const input = document.getElementById('system-input');
-    const value = input.value.trim();
+  openSystemModal() {
+    document.getElementById('system-modal').style.display = 'flex';
+    document.getElementById('system-type').value = '';
+    document.getElementById('system-name').value = '';
+    document.getElementById('system-variant').value = '';
+    document.getElementById('systems-error').textContent = '';
+  }
+
+  closeSystemModal() {
+    document.getElementById('system-modal').style.display = 'none';
+  }
+
+  onSystemTypeChange(e) {
+    const type = e.target.value;
+    const variantContainer = document.getElementById('system-variant-container');
+    if (SYSTEM_TYPES[type]?.hasVariants) {
+      variantContainer.style.display = 'block';
+      document.getElementById('system-variant').required = true;
+    } else {
+      variantContainer.style.display = 'none';
+      document.getElementById('system-variant').required = false;
+    }
+  }
+
+  addSystemFromModal() {
+    const type = document.getElementById('system-type').value;
+    const name = document.getElementById('system-name').value.trim();
+    const variant = document.getElementById('system-variant').value || null;
     const error = document.getElementById('systems-error');
 
-    if (!value) {
-      error.textContent = 'Please enter a system name';
+    if (!type) {
+      error.textContent = 'Please select a system type';
       return;
     }
 
-    if (this.systems.includes(value)) {
-      error.textContent = 'This system is already added';
+    if (!name) {
+      error.textContent = 'Please enter a product name';
+      return;
+    }
+
+    if (SYSTEM_TYPES[type]?.hasVariants && !variant) {
+      error.textContent = 'Please select a variant';
       return;
     }
 
@@ -154,15 +187,20 @@ class UploadWizard {
       return;
     }
 
-    this.systems.push(value);
-    input.value = '';
-    error.textContent = '';
-    this.renderSystems();
-    this.updateTestName();
+    try {
+      const system = systemManager.addSystem(type, name, variant);
+      this.systems = systemManager.getAllSystems();
+      this.renderSystems();
+      this.updateTestName();
+      this.closeSystemModal();
+    } catch (err) {
+      error.textContent = err.message;
+    }
   }
 
-  removeSystem(system) {
-    this.systems = this.systems.filter(s => s !== system);
+  removeSystem(systemId) {
+    systemManager.deleteSystem(systemId);
+    this.systems = systemManager.getAllSystems();
     this.renderSystems();
     this.updateTestName();
   }
@@ -171,21 +209,23 @@ class UploadWizard {
     const list = document.getElementById('systems-list');
     list.innerHTML = this.systems.map(system => `
       <div class="system-tag">
-        <span>${system}</span>
-        <button type="button" data-system="${system}" aria-label="Remove ${system}">×</button>
+        <span>${systemManager.formatSystemName(system)}</span>
+        <button type="button" data-system-id="${system.id}" aria-label="Remove system">×</button>
       </div>
     `).join('');
 
     list.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        this.removeSystem(e.target.dataset.system);
+        this.removeSystem(e.target.dataset.systemId);
       });
     });
   }
 
   updateTestName() {
-    const systemStr = this.systems.length > 0 ? this.systems.join(' + ') : 'Test';
+    const systemStr = this.systems.length > 0
+      ? this.systems.map(s => systemManager.formatSystemName(s)).join(' + ')
+      : 'Test';
     const trackSelect = document.getElementById('track');
     const trackName = trackSelect.selectedOptions[0]?.textContent || 'Unknown Track';
     const date = new Date().toISOString().split('T')[0];
@@ -195,9 +235,11 @@ class UploadWizard {
 
   nextStep() {
     // Validate before moving from Step 3
-    if (this.currentStep === 3 && this.systems.length === 0) {
-      alert('Please add at least one system under test');
-      return;
+    if (this.currentStep === 3) {
+      if (!Array.isArray(this.systems) || this.systems.length === 0) {
+        alert('Please add at least one system under test');
+        return;
+      }
     }
 
     this.currentStep++;
@@ -277,7 +319,7 @@ class UploadWizard {
 
   async doPublish(status) {
     // Validate systems
-    if (this.systems.length === 0) {
+    if (!Array.isArray(this.systems) || this.systems.length === 0) {
       alert('Please add at least one system under test');
       return;
     }
@@ -320,10 +362,15 @@ class UploadWizard {
 
     try {
       // Collect metadata
+      const systemLabels = this.systems.map(s => systemManager.formatSystemName(s)).join(', ');
       const metadata = {
         category: document.getElementById('category').value,
-        system_under_test: this.systems.join(', '),
-        systems: this.systems,
+        system_under_test: systemLabels,
+        systems: this.systems.map(s => ({
+          type: s.type,
+          name: s.name,
+          variant: s.variant,
+        })),
         track_id: trackId,
         custom_name: testName,
         pilot_lat: parseFloat(document.getElementById('pilot-lat').value),

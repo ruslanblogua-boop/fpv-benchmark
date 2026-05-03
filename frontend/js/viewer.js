@@ -38,6 +38,26 @@ class HeatmapViewer {
     document.getElementById('filter-category').addEventListener('change', () => this.loadTests());
     document.getElementById('filter-system').addEventListener('input', () => this.loadTests());
 
+    // Topbar category navigation
+    document.querySelectorAll('.topbar-link[data-category]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const category = e.target.dataset.category;
+        this.setCategory(category);
+      });
+    });
+
+    // Topbar login/settings (placeholder)
+    document.getElementById('topbar-login').addEventListener('click', () => {
+      console.log('Login clicked');
+      // TODO: Implement login modal
+    });
+
+    document.getElementById('topbar-settings').addEventListener('click', () => {
+      console.log('Settings clicked');
+      // TODO: Implement settings modal
+    });
+
     document.querySelectorAll('input[name="metric"]').forEach(radio => {
       radio.addEventListener('change', () => this.updateHeatmap());
     });
@@ -45,6 +65,15 @@ class HeatmapViewer {
     document.getElementById('compare-mode').addEventListener('click', () => this.toggleCompareMode());
     document.getElementById('playback-play').addEventListener('click', () => this.togglePlayback());
     document.getElementById('playback-slider').addEventListener('input', () => this.updatePlayback());
+  }
+
+  setCategory(category) {
+    document.querySelectorAll('.topbar-link[data-category]').forEach(link => {
+      link.classList.remove('active');
+    });
+    document.querySelector(`.topbar-link[data-category="${category}"]`).classList.add('active');
+    document.getElementById('filter-category').value = category;
+    this.loadTests();
   }
 
   async loadTests() {

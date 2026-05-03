@@ -98,16 +98,53 @@
 
         <label>
           Systems Under Test
-          <p class="hint">Add one or more systems being tested (e.g. video link, control link, antenna)</p>
+          <p class="hint">Select FPV systems being tested in this flight</p>
         </label>
         <div id="systems-container" class="systems-input">
           <div id="systems-list" class="systems-list"></div>
-          <div class="systems-add">
-            <input type="text" id="system-input" placeholder="e.g. WalkSnail Avatar Pro 1W" maxlength="100">
-            <button type="button" id="system-add-btn" class="btn btn-small">Add</button>
-          </div>
+          <button type="button" id="add-system-btn" class="btn btn-small">+ Add System</button>
         </div>
         <div id="systems-error" style="color: #f44; font-size: 12px; margin-top: 0.25rem;"></div>
+
+        <!-- System selection modal -->
+        <div id="system-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; z-index: 1000; align-items: center; justify-content: center;">
+          <div style="background: var(--bg-darker); border: 1px solid var(--border-dim); border-radius: 4px; padding: 1.5rem; max-width: 500px; width: 90%;">
+            <h3 style="color: var(--accent-cyan); margin-bottom: 1rem;">Add System</h3>
+
+            <label style="display: block; margin-bottom: 1rem;">
+              System Type
+              <select id="system-type" required style="width: 100%; margin-top: 0.5rem;">
+                <option value="">Select a type...</option>
+                <option value="VRX">VRX (Goggle)</option>
+                <option value="VTX">VTX</option>
+                <option value="POWER">Power</option>
+                <option value="CONTROL_LINK">Control Link</option>
+              </select>
+            </label>
+
+            <label style="display: block; margin-bottom: 1rem;">
+              Product Name/Model
+              <input type="text" id="system-name" placeholder="e.g. WalkSnail Avatar Pro 1W" maxlength="100" required style="width: 100%; margin-top: 0.5rem;">
+            </label>
+
+            <div id="system-variant-container" style="display: none; margin-bottom: 1rem;">
+              <label style="display: block;">
+                Control Link Type
+                <select id="system-variant" required style="width: 100%; margin-top: 0.5rem;">
+                  <option value="">Select type...</option>
+                  <option value="single">Single</option>
+                  <option value="diversity">Diversity</option>
+                  <option value="gemini">Gemini</option>
+                </select>
+              </label>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <button type="button" id="system-modal-cancel" class="btn" style="flex: 1;">Cancel</button>
+              <button type="button" id="system-modal-add" class="btn btn-primary" style="flex: 1;">Add System</button>
+            </div>
+          </div>
+        </div>
 
         <label>
           Track
@@ -200,6 +237,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/systems.js"></script>
   <script src="js/upload.js"></script>
 </body>
 </html>

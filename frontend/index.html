@@ -9,6 +9,24 @@
   <link rel="stylesheet" href="css/map.css">
 </head>
 <body>
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <a href="/" class="topbar-logo">fpv-heatmap</a>
+    </div>
+
+    <div class="topbar-categories">
+      <a href="#" class="topbar-link active" data-category="link">Link Quality</a>
+      <a href="#" class="topbar-link" data-category="camera">Camera</a>
+      <a href="#" class="topbar-link" data-category="battery">Battery</a>
+    </div>
+
+    <div class="topbar-actions">
+      <a href="/upload.html" class="topbar-link topbar-upload">+ New Test</a>
+      <button id="topbar-login" class="topbar-link">Login</button>
+      <button id="topbar-settings" class="topbar-link topbar-icon" title="Settings">⚙</button>
+    </div>
+  </nav>
+
   <div id="app" class="viewer-container">
     <div id="map" class="map-container"></div>
 
