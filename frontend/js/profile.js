@@ -29,6 +29,15 @@ class ProfilePage {
     document.getElementById('create-profile').addEventListener('click', () => this.createProfile());
     document.getElementById('cancel-profile').addEventListener('click', () => this.toggleNewProfileForm());
 
+    // Logout button
+    const logoutBtn = document.getElementById('logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        auth.logout();
+        window.location.href = '/';
+      });
+    }
+
     // Test list filtering
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
