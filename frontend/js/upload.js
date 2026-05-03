@@ -328,9 +328,153 @@ class UploadWizard {
   }
 
   renderPreview() {
-    // TODO: Initialize Leaflet map in step 4
-    // Show heatmap + path
-    // Show lap table, link loss summary
+    // Initialize Leaflet map in step 4
+    const mapContainer = document.getElementById('map-preview');
+    if (this.previewMap) this.previewMap.remove();
+
+    this.previewMap = L.map(mapContainer).setView([52.18, 21.13], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19,
+    }).addTo(this.previewMap);
+
+    // Draw path (cyan polyline)
+    if (this.pathData && this.pathData.features) {
+      this.pathData.features.forEach(feature => {
+        if (feature.geometry.type === 'LineString') {
+          L.polyline(
+            feature.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
+            { color: 'cyan', weight: 3, opacity: 0.8 }
+          ).addTo(this.previewMap);
+        }
+      });
+    }
+
+    // Draw heatmap as circles (intensity represented by color/radius)
+    if (this.heatmapData && this.heatmapData.features) {
+      this.heatmapData.features.forEach(feature => {
+        if (feature.geometry.type === 'Point') {
+          const [lon, lat] = feature.geometry.coordinates;
+          const value = feature.properties?.value || 0;
+
+          // Scale: higher values → orange-red, lower values → dim
+          let color = '#00ff00';
+          let radius = 4;
+
+          if (value > 0.75) {
+            color = '#ff0000'; // Red for high
+            radius = 6;
+          } else if (value > 0.5) {
+            color = '#ff8800'; // Orange for medium-high
+            radius = 5;
+          } else if (value > 0.25) {
+            color = '#ffff00'; // Yellow for medium
+            radius = 4;
+          }
+
+          L.circleMarker([lat, lon], {
+            radius: radius,
+            color: color,
+            weight: 1,
+            opacity: 0.7,
+            fillOpacity: 0.6,
+          }).addTo(this.previewMap);
+        }
+      });
+    }
+
+    // Fit bounds to show all data
+    if (this.pathData && this.pathData.features && this.pathData.features.length > 0) {
+      const bounds = L.latLngBounds();
+      this.pathData.features.forEach(feature => {
+        if (feature.geometry.type === 'LineString') {
+          feature.geometry.coordinates.forEach(([lon, lat]) => {
+            bounds.extend([lat, lon]);
+          });
+        }
+      });
+      if (bounds.isValid()) {
+        this.previewMap.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+
+    // Display summary statistics
+    const infoPanel = document.getElementById('preview-info');
+    const heatmapCount = this.heatmapData?.features?.length || 0;
+    const pathCount = this.pathData?.features?.length || 0;
+    const pathDistance = this.calculatePathDistance();
+    const systemStr = this.systems.map(s => systemManager.formatSystemName(s)).join(', ');
+    const trackSelect = document.getElementById('track');
+    const trackName = trackSelect.selectedOptions[0]?.textContent || 'Unknown';
+    const testName = document.getElementById('test-name').value || 'Unnamed test';
+
+    infoPanel.innerHTML = `
+      <h3>Test Summary</h3>
+      <table>
+        <tr>
+          <td><strong>Test Name:</strong></td>
+          <td>${escapeHtml(testName)}</td>
+        </tr>
+        <tr>
+          <td><strong>Track:</strong></td>
+          <td>${escapeHtml(trackName)}</td>
+        </tr>
+        <tr>
+          <td><strong>Systems:</strong></td>
+          <td>${escapeHtml(systemStr || 'None selected')}</td>
+        </tr>
+        <tr>
+          <td><strong>Heatmap Cells:</strong></td>
+          <td>${heatmapCount}</td>
+        </tr>
+        <tr>
+          <td><strong>Path Points:</strong></td>
+          <td>${pathCount}</td>
+        </tr>
+        <tr>
+          <td><strong>Approximate Distance:</strong></td>
+          <td>${pathDistance}</td>
+        </tr>
+        <tr>
+          <td><strong>Pilot Position:</strong></td>
+          <td>${document.getElementById('pilot-lat').value}, ${document.getElementById('pilot-lon').value}</td>
+        </tr>
+        <tr>
+          <td><strong>Grid Size:</strong></td>
+          <td>${document.getElementById('grid-size').value}m</td>
+        </tr>
+      </table>
+    `;
+  }
+
+  calculatePathDistance() {
+    if (!this.pathData || !this.pathData.features) return '0 km';
+
+    let totalDistance = 0;
+    this.pathData.features.forEach(feature => {
+      if (feature.geometry.type === 'LineString') {
+        const coords = feature.geometry.coordinates;
+        for (let i = 0; i < coords.length - 1; i++) {
+          const [lon1, lat1] = coords[i];
+          const [lon2, lat2] = coords[i + 1];
+          const distance = this.haversineM(lat1, lon1, lat2, lon2);
+          totalDistance += distance;
+        }
+      }
+    });
+
+    return (totalDistance / 1000).toFixed(2) + ' km';
+  }
+
+  // Haversine distance calculation (same as in utils.ts)
+  haversineM(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
   async publishDraft() {
@@ -424,6 +568,18 @@ class UploadWizard {
       alert('Upload failed: ' + err.message);
     }
   }
+}
+
+// Helper to safely escape HTML
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 // Initialize upload wizard when DOM is ready

@@ -28,7 +28,7 @@ router.options('*', (req: IRequest, env: Env) =>
 
 // ── Public routes ─────────────────────────────────────────────────────────────
 router.get('/api/health',         () => jsonResponse({ ok: true, ts: Date.now() }));
-router.post('/api/auth/sync',     handleAuth);          // sync Supabase user to D1
+router.post('/api/auth/sync',     handleAuth.sync);     // sync Supabase user to D1
 
 router.get('/api/tracks',         handleTracks.list);
 router.get('/api/tracks/:slug',   handleTracks.get);
@@ -90,7 +90,17 @@ async function withAdmin(req: IRequest, env: Env): Promise<Response | void> {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      return await router.fetch(request, env, ctx);
+      const response = await router.fetch(request, env, ctx);
+      // Guarantee CORS headers on every response (catches 404s, unhandled routes, etc.)
+      const headers = new Headers(response.headers);
+      for (const [k, v] of Object.entries(corsHeaders(env))) {
+        headers.set(k, String(v));
+      }
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
     } catch (err: any) {
       console.error('Unhandled error:', err);
       return errorResponse('Internal server error', 500);

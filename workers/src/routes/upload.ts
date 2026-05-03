@@ -4,9 +4,9 @@ import { jsonResponse } from '../lib/utils';
 
 export const handleUpload = {
   async heatmap(req: IRequest, env: Env) {
-    return jsonResponse({ key: 'tests/1/heatmap.geojson' });
+    return jsonResponse({ key: 'tests/1/heatmap.geojson' }, 200, env);
   },
   async path(req: IRequest, env: Env) {
-    return jsonResponse({ key: 'tests/1/path.geojson' });
+    return jsonResponse({ key: 'tests/1/path.geojson' }, 200, env);
   },
 };

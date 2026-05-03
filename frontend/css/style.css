@@ -552,6 +552,42 @@ table tr:hover {
   color: #00c864;
 }
 
+/* Preview Panel */
+#preview-info {
+  margin-top: 1.5rem;
+}
+
+#preview-info h3 {
+  color: var(--accent-orange);
+  margin-bottom: 1rem;
+  font-size: 18px;
+}
+
+#preview-info table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#preview-info table tr {
+  border-bottom: 1px solid var(--border-dim);
+}
+
+#preview-info table td {
+  padding: 0.75rem 0.5rem;
+  vertical-align: top;
+}
+
+#preview-info table td:first-child {
+  width: 40%;
+  color: var(--fg-light);
+}
+
+#preview-info table td:last-child {
+  color: var(--fg-lighter);
+  text-align: right;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
@@ -566,5 +602,9 @@ table tr:hover {
 
   table th, table td {
     padding: 0.25rem 0.5rem;
+  }
+
+  #preview-info table td {
+    padding: 0.5rem 0.25rem;
   }
 }
