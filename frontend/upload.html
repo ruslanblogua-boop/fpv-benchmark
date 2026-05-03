@@ -102,7 +102,7 @@
         </label>
         <div id="systems-container" class="systems-input">
           <div id="systems-list" class="systems-list"></div>
-          <button type="button" id="add-system-btn" class="btn btn-small">+ Add System</button>
+          <button type="button" id="add-system-btn" class="btn btn-small" onclick="(function() { const m = document.getElementById('system-modal'); if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; } })()">+ Add System</button>
         </div>
         <div id="systems-error" style="color: #f44; font-size: 12px; margin-top: 0.25rem;"></div>
 
@@ -113,7 +113,7 @@
 
             <label style="display: block; margin-bottom: 1rem;">
               System Type
-              <select id="system-type" required style="width: 100%; margin-top: 0.5rem;">
+              <select id="system-type" required style="width: 100%; margin-top: 0.5rem;" onchange="window.uploadWizard?.onSystemTypeChange({target: this})">
                 <option value="">Select a type...</option>
                 <option value="VRX">VRX (Goggle)</option>
                 <option value="VTX">VTX</option>
@@ -140,8 +140,8 @@
             </div>
 
             <div style="display: flex; gap: 0.75rem;">
-              <button type="button" id="system-modal-cancel" class="btn" style="flex: 1;">Cancel</button>
-              <button type="button" id="system-modal-add" class="btn btn-primary" style="flex: 1;">Add System</button>
+              <button type="button" id="system-modal-cancel" class="btn" style="flex: 1;" onclick="(function() { const m = document.getElementById('system-modal'); if (m) { m.classList.add('hidden'); m.style.display = 'none'; } })()">Cancel</button>
+              <button type="button" id="system-modal-add" class="btn btn-primary" style="flex: 1;" onclick="window.uploadWizard?.addSystemFromModal?.()">Add System</button>
             </div>
           </div>
         </div>

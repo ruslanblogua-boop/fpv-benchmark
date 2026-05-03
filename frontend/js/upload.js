@@ -18,10 +18,8 @@ class UploadWizard {
       return;
     }
 
-    // Step 1: File upload (set up first before API calls)
-    document.getElementById('file-heatmap').addEventListener('change', (e) => this.onHeatmapFileSelect(e));
-    document.getElementById('file-path').addEventListener('change', (e) => this.onPathFileSelect(e));
-    document.getElementById('step-1-next').addEventListener('click', () => this.nextStep());
+    // Attach all event listeners FIRST (synchronously, before any async operations)
+    this.attachEventListeners();
 
     // Load tracks (non-blocking)
     try {
@@ -41,6 +39,17 @@ class UploadWizard {
       // Continue anyway with empty profiles
     }
 
+    // Load saved systems
+    this.systems = systemManager.getAllSystems();
+    this.renderSystems();
+  }
+
+  attachEventListeners() {
+    // Step 1: File upload
+    document.getElementById('file-heatmap').addEventListener('change', (e) => this.onHeatmapFileSelect(e));
+    document.getElementById('file-path').addEventListener('change', (e) => this.onPathFileSelect(e));
+    document.getElementById('step-1-next').addEventListener('click', () => this.nextStep());
+
     // Step 2: Map setup
     document.getElementById('step-2-back').addEventListener('click', () => this.prevStep());
     document.getElementById('step-2-next').addEventListener('click', () => this.nextStep());
@@ -52,19 +61,30 @@ class UploadWizard {
     document.getElementById('track').addEventListener('change', (e) => this.onTrackChange(e));
 
     // System modal
-    document.getElementById('add-system-btn').addEventListener('click', () => this.openSystemModal());
-    document.getElementById('system-type').addEventListener('change', (e) => this.onSystemTypeChange(e));
-    document.getElementById('system-modal-add').addEventListener('click', () => this.addSystemFromModal());
-    document.getElementById('system-modal-cancel').addEventListener('click', () => this.closeSystemModal());
+    const addSystemBtn = document.getElementById('add-system-btn');
+    if (addSystemBtn) {
+      addSystemBtn.addEventListener('click', () => this.openSystemModal());
+    }
+
+    const systemTypeSelect = document.getElementById('system-type');
+    if (systemTypeSelect) {
+      systemTypeSelect.addEventListener('change', (e) => this.onSystemTypeChange(e));
+    }
+
+    const systemModalAdd = document.getElementById('system-modal-add');
+    if (systemModalAdd) {
+      systemModalAdd.addEventListener('click', () => this.addSystemFromModal());
+    }
+
+    const systemModalCancel = document.getElementById('system-modal-cancel');
+    if (systemModalCancel) {
+      systemModalCancel.addEventListener('click', () => this.closeSystemModal());
+    }
 
     // Step 4: Preview & submit
     document.getElementById('step-4-back').addEventListener('click', () => this.prevStep());
     document.getElementById('publish-draft').addEventListener('click', () => this.publishDraft());
     document.getElementById('publish-live').addEventListener('click', () => this.publishLive());
-
-    // Load saved systems
-    this.systems = systemManager.getAllSystems();
-    this.renderSystems();
   }
 
   onHeatmapFileSelect(e) {
@@ -138,7 +158,9 @@ class UploadWizard {
   }
 
   openSystemModal() {
-    document.getElementById('system-modal').style.display = 'flex';
+    const modal = document.getElementById('system-modal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     document.getElementById('system-type').value = '';
     document.getElementById('system-name').value = '';
     document.getElementById('system-variant').value = '';
@@ -146,7 +168,9 @@ class UploadWizard {
   }
 
   closeSystemModal() {
-    document.getElementById('system-modal').style.display = 'none';
+    const modal = document.getElementById('system-modal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
   }
 
   onSystemTypeChange(e) {
@@ -403,6 +427,8 @@ class UploadWizard {
 }
 
 // Initialize upload wizard when DOM is ready
+let uploadWizardInstance = null;
 document.addEventListener('DOMContentLoaded', () => {
-  new UploadWizard();
+  uploadWizardInstance = new UploadWizard();
+  window.uploadWizard = uploadWizardInstance;
 });
