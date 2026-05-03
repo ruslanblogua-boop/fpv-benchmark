@@ -16,6 +16,15 @@
   border-radius: 4px;
 }
 
+#map-setup {
+  width: 100% !important;
+  height: 400px !important;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-dim);
+  position: relative;
+}
+
 /* Leaflet customization */
 .leaflet-control {
   background: var(--bg-darker) !important;

@@ -150,10 +150,45 @@ class UploadWizard {
   }
 
   setupMapStep() {
-    // TODO: Initialize Leaflet map in step 2
-    // Show path from pathData
-    // Allow dragging pilot marker
-    // Allow bearing input
+    // Initialize Leaflet map
+    const mapContainer = document.getElementById('map-setup');
+    if (this.map) this.map.remove(); // Clean up old map
+
+    this.map = L.map(mapContainer).setView([52.18, 21.13], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19,
+    }).addTo(this.map);
+
+    // Draw path
+    if (this.pathData && this.pathData.features) {
+      this.pathData.features.forEach(feature => {
+        if (feature.geometry.type === 'LineString') {
+          L.polyline(
+            feature.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
+            { color: 'cyan', weight: 2, opacity: 0.8 }
+          ).addTo(this.map);
+        }
+      });
+    }
+
+    // Pilot marker
+    const pilotLat = parseFloat(document.getElementById('pilot-lat').value) || 52.18;
+    const pilotLon = parseFloat(document.getElementById('pilot-lon').value) || 21.13;
+    this.pilotMarker = L.marker([pilotLat, pilotLon], { draggable: true }).addTo(this.map);
+
+    this.pilotMarker.on('dragend', () => {
+      const { lat, lng } = this.pilotMarker.getLatLng();
+      document.getElementById('pilot-lat').value = lat.toFixed(5);
+      document.getElementById('pilot-lon').value = lng.toFixed(5);
+    });
+
+    // Click to set position
+    this.map.on('click', (e) => {
+      this.pilotMarker.setLatLng(e.latlng);
+      document.getElementById('pilot-lat').value = e.latlng.lat.toFixed(5);
+      document.getElementById('pilot-lon').value = e.latlng.lng.toFixed(5);
+    });
   }
 
   renderPreview() {
