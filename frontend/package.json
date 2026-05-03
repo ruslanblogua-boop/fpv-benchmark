@@ -1,0 +1,13 @@
+{
+  "name": "fpv-heatmap-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve",
+    "deploy": "wrangler pages deploy"
+  },
+  "devDependencies": {
+    "wrangler": "latest",
+    "serve": "latest"
+  }
+}

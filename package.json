@@ -1,0 +1,17 @@
+{
+  "name": "fpv-heatmap",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "workers"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:worker": "npm run dev --workspace=workers",
+    "deploy:frontend": "npm run deploy --workspace=frontend",
+    "deploy:worker": "npm run deploy --workspace=workers",
+    "db:migrate": "wrangler d1 migrations apply fpv-heatmap-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply fpv-heatmap-db --remote"
+  }
+}

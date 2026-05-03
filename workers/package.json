@@ -1,0 +1,18 @@
+{
+  "name": "fpv-heatmap-workers",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "typescript": "latest",
+    "wrangler": "latest"
+  },
+  "dependencies": {
+    "itty-router": "latest"
+  }
+}

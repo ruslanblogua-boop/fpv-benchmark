@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>fpv-heatmap — FPV Systems Benchmarking</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+  <div id="app" class="viewer-container">
+    <div id="map" class="map-container"></div>
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>fpv-heatmap</h1>
+        <p class="tagline">FPV Systems Benchmarking Platform</p>
+      </div>
+
+      <div class="panel test-browser">
+        <h2>Tests</h2>
+
+        <div class="filters">
+          <label>
+            Track
+            <select id="filter-track">
+              <option value="">All Tracks</option>
+            </select>
+          </label>
+
+          <label>
+            Category
+            <select id="filter-category">
+              <option value="">All Categories</option>
+              <option value="link">Link Quality</option>
+            </select>
+          </label>
+
+          <label>
+            System
+            <input type="text" id="filter-system" placeholder="Filter by system...">
+          </label>
+        </div>
+
+        <div id="test-list" class="test-list">
+          <!-- populated by viewer.js -->
+        </div>
+      </div>
+
+      <div class="panel metric-picker">
+        <h3>Metric</h3>
+        <div class="metric-options">
+          <label><input type="radio" name="metric" value="rc_snr" checked> RC SNR (dB)</label>
+          <label><input type="radio" name="metric" value="bitrate"> Bitrate (Mbps)</label>
+          <label><input type="radio" name="metric" value="video_signal"> Video Signal (bars)</label>
+          <label><input type="radio" name="metric" value="altitude"> Altitude (m)</label>
+          <label><input type="radio" name="metric" value="speed"> Speed (m/s)</label>
+        </div>
+      </div>
+
+      <div class="panel controls">
+        <button id="compare-mode" class="btn">Compare Mode</button>
+        <a href="/upload" class="btn btn-primary">Upload Test</a>
+        <a href="/profile" class="btn">Profile</a>
+      </div>
+    </aside>
+
+    <div class="test-detail-panel">
+      <div id="test-info" class="panel">
+        <!-- Test details populated here -->
+      </div>
+
+      <div id="playback" class="playback-controls">
+        <div class="slider-container">
+          <input type="range" id="playback-slider" min="0" max="100" value="0">
+          <span id="playback-time">00:00</span>
+        </div>
+        <button id="playback-play">Play</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/viewer.js"></script>
+</body>
+</html>

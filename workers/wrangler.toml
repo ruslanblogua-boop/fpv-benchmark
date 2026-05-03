@@ -1,0 +1,28 @@
+name = "fpv-heatmap-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ── D1 Database ───────────────────────────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "fpv-heatmap-db"
+database_id = "21ca602b-5ab9-4d84-bfbe-778e251d16e9"
+
+# ── R2 Storage ────────────────────────────────────────────────────────────────
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "fpv-heatmap-storage"
+
+# ── Environment variables ─────────────────────────────────────────────────────
+[vars]
+SUPABASE_URL = "https://fkbjviqahbonwtwjutkc.supabase.co"
+FRONTEND_URL = "https://localhost:8787"
+
+# Secrets (set via: wrangler secret put SUPABASE_JWT_SECRET)
+# SUPABASE_JWT_SECRET
+
+# ── Local dev ─────────────────────────────────────────────────────────────────
+[dev]
+port = 8787
+local_protocol = "http"

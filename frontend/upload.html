@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Test — fpv-heatmap</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+  <div id="app" class="upload-container">
+    <header class="header">
+      <h1>Upload Test</h1>
+      <a href="/">← Back to Viewer</a>
+    </header>
+
+    <div class="wizard">
+      <div class="steps">
+        <div class="step-indicator">
+          <span class="step active" data-step="1">1. Files</span>
+          <span class="step" data-step="2">2. Map Setup</span>
+          <span class="step" data-step="3">3. Metadata</span>
+          <span class="step" data-step="4">4. Preview</span>
+        </div>
+      </div>
+
+      <!-- Step 1: File Upload -->
+      <div id="step-1" class="step-content active">
+        <h2>Step 1: Upload GeoJSON Files</h2>
+        <p>Select the processed files from your local track processor run.</p>
+
+        <div class="file-input-group">
+          <label>Heatmap GeoJSON</label>
+          <input type="file" id="file-heatmap" accept=".geojson,.json" required>
+          <div id="heatmap-preview" class="file-preview"></div>
+        </div>
+
+        <div class="file-input-group">
+          <label>Path GeoJSON</label>
+          <input type="file" id="file-path" accept=".geojson,.json" required>
+          <div id="path-preview" class="file-preview"></div>
+        </div>
+
+        <button id="step-1-next" class="btn btn-primary" disabled>Next</button>
+      </div>
+
+      <!-- Step 2: Map Setup -->
+      <div id="step-2" class="step-content">
+        <h2>Step 2: Map Setup</h2>
+        <p>Verify path and set pilot marker position/bearing.</p>
+
+        <div id="map-setup" class="map-container"></div>
+
+        <div class="control-panel">
+          <label>
+            Grid Size
+            <select id="grid-size">
+              <option value="0.5">0.5m (detail)</option>
+              <option value="1.0" selected>1.0m (fast)</option>
+            </select>
+          </label>
+
+          <label>
+            Pilot Latitude
+            <input type="number" id="pilot-lat" step="0.00001" placeholder="52.18">
+          </label>
+
+          <label>
+            Pilot Longitude
+            <input type="number" id="pilot-lon" step="0.00001" placeholder="21.13">
+          </label>
+
+          <label>
+            Pilot Bearing (degrees)
+            <input type="number" id="pilot-bearing" min="0" max="360" step="1" placeholder="0">
+          </label>
+
+          <p class="hint">Click on map to set pilot position</p>
+        </div>
+
+        <div class="button-group">
+          <button id="step-2-back" class="btn">Back</button>
+          <button id="step-2-next" class="btn btn-primary">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Metadata -->
+      <div id="step-3" class="step-content">
+        <h2>Step 3: Test Metadata</h2>
+
+        <label>
+          Category
+          <select id="category">
+            <option value="link" selected>Link Quality</option>
+          </select>
+        </label>
+
+        <label>
+          System Under Test
+          <input type="text" id="system" placeholder="e.g. WalkSnail Avatar Pro 1W" required>
+        </label>
+
+        <label>
+          Track
+          <select id="track" required>
+            <option value="">Select a track...</option>
+          </select>
+        </label>
+
+        <label>
+          Drone Profile
+          <select id="profile">
+            <option value="">New profile</option>
+          </select>
+          <div id="new-profile" class="hidden">
+            <input type="text" placeholder="Profile name" id="profile-name">
+            <input type="text" placeholder="Frame (e.g. iFlight Chimera)" id="profile-frame">
+            <input type="text" placeholder="Motors" id="profile-motors">
+            <input type="text" placeholder="FC" id="profile-fc">
+            <input type="text" placeholder="VTX" id="profile-vtx">
+            <input type="text" placeholder="Props" id="profile-props">
+            <input type="number" placeholder="Weight (g)" id="profile-weight">
+          </div>
+        </label>
+
+        <label>
+          Test Name
+          <input type="text" id="test-name" placeholder="Auto-generated name" readonly>
+        </label>
+
+        <label>
+          Wind Speed (optional)
+          <select id="wind-speed">
+            <option value="">—</option>
+            <option value="calm">Calm</option>
+            <option value="light">Light</option>
+            <option value="moderate">Moderate</option>
+            <option value="strong">Strong</option>
+          </select>
+        </label>
+
+        <label>
+          Wind Direction (optional)
+          <select id="wind-direction">
+            <option value="">—</option>
+            <option value="N">N</option>
+            <option value="NE">NE</option>
+            <option value="E">E</option>
+            <option value="SE">SE</option>
+            <option value="S">S</option>
+            <option value="SW">SW</option>
+            <option value="W">W</option>
+            <option value="NW">NW</option>
+          </select>
+        </label>
+
+        <label>
+          Notes
+          <textarea id="notes" placeholder="Test notes..."></textarea>
+        </label>
+
+        <div class="button-group">
+          <button id="step-3-back" class="btn">Back</button>
+          <button id="step-3-next" class="btn btn-primary">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Preview -->
+      <div id="step-4" class="step-content">
+        <h2>Step 4: Preview</h2>
+
+        <div id="map-preview" class="map-container"></div>
+
+        <div id="preview-info" class="panel">
+          <!-- Summary stats shown here -->
+        </div>
+
+        <div class="button-group">
+          <button id="step-4-back" class="btn">Back</button>
+          <button id="publish-draft" class="btn">Save as Draft</button>
+          <button id="publish-live" class="btn btn-primary">Publish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/upload.js"></script>
+</body>
+</html>

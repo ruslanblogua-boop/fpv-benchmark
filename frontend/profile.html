@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — fpv-heatmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app" class="profile-container">
+    <header class="header">
+      <h1>Profile</h1>
+      <a href="/">← Back to Viewer</a>
+    </header>
+
+    <div class="content">
+      <!-- User Info -->
+      <section class="panel user-info">
+        <h2>User Settings</h2>
+        <label>
+          Display Name
+          <input type="text" id="display-name" placeholder="Your name">
+        </label>
+        <button id="save-name" class="btn btn-primary">Save</button>
+      </section>
+
+      <!-- Drone Profiles -->
+      <section class="panel drone-profiles">
+        <h2>Drone Profiles</h2>
+        <p>Reusable drone configurations for your tests.</p>
+
+        <div id="profile-list">
+          <!-- Profiles populated here -->
+        </div>
+
+        <div class="new-profile-form hidden" id="new-profile-form">
+          <h3>New Profile</h3>
+          <label>Name <input type="text" id="new-name" required></label>
+          <label>Frame <input type="text" id="new-frame"></label>
+          <label>Motors <input type="text" id="new-motors"></label>
+          <label>FC <input type="text" id="new-fc"></label>
+          <label>VTX <input type="text" id="new-vtx"></label>
+          <label>Props <input type="text" id="new-props"></label>
+          <label>Weight (g) <input type="number" id="new-weight"></label>
+          <label>Notes <textarea id="new-notes"></textarea></label>
+          <button id="create-profile" class="btn btn-primary">Create</button>
+          <button id="cancel-profile" class="btn">Cancel</button>
+        </div>
+
+        <button id="add-profile" class="btn">Add Profile</button>
+      </section>
+
+      <!-- Tests -->
+      <section class="panel my-tests">
+        <h2>My Tests</h2>
+        <div class="test-tabs">
+          <button class="tab active" data-filter="all">All</button>
+          <button class="tab" data-filter="draft">Drafts</button>
+          <button class="tab" data-filter="published">Published</button>
+        </div>
+
+        <div id="my-test-list" class="test-table">
+          <!-- Tests listed here -->
+        </div>
+      </section>
+
+      <!-- Auth -->
+      <section class="panel auth">
+        <h2>Auth</h2>
+        <button id="logout" class="btn btn-danger">Logout</button>
+      </section>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>
