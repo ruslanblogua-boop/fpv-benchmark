@@ -7,6 +7,7 @@ class UploadWizard {
     this.pathData = null;
     this.mapSetup = null;
     this.metadata = null;
+    this.systems = [];
     this.init();
   }
 
@@ -48,7 +49,14 @@ class UploadWizard {
     document.getElementById('step-3-back').addEventListener('click', () => this.prevStep());
     document.getElementById('step-3-next').addEventListener('click', () => this.nextStep());
     document.getElementById('profile').addEventListener('change', (e) => this.onProfileChange(e));
-    document.getElementById('system').addEventListener('input', () => this.updateTestName());
+    document.getElementById('track').addEventListener('change', () => this.updateTestName());
+    document.getElementById('system-add-btn').addEventListener('click', () => this.addSystem());
+    document.getElementById('system-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.addSystem();
+      }
+    });
 
     // Step 4: Preview & submit
     document.getElementById('step-4-back').addEventListener('click', () => this.prevStep());
@@ -120,16 +128,72 @@ class UploadWizard {
     document.getElementById('new-profile').classList.toggle('hidden', !isNew);
   }
 
+  addSystem() {
+    const input = document.getElementById('system-input');
+    const value = input.value.trim();
+    const error = document.getElementById('systems-error');
+
+    if (!value) {
+      error.textContent = 'Please enter a system name';
+      return;
+    }
+
+    if (this.systems.includes(value)) {
+      error.textContent = 'This system is already added';
+      return;
+    }
+
+    if (this.systems.length >= 5) {
+      error.textContent = 'Maximum 5 systems allowed';
+      return;
+    }
+
+    this.systems.push(value);
+    input.value = '';
+    error.textContent = '';
+    this.renderSystems();
+    this.updateTestName();
+  }
+
+  removeSystem(system) {
+    this.systems = this.systems.filter(s => s !== system);
+    this.renderSystems();
+    this.updateTestName();
+  }
+
+  renderSystems() {
+    const list = document.getElementById('systems-list');
+    list.innerHTML = this.systems.map(system => `
+      <div class="system-tag">
+        <span>${system}</span>
+        <button type="button" data-system="${system}" aria-label="Remove ${system}">×</button>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.removeSystem(e.target.dataset.system);
+      });
+    });
+  }
+
   updateTestName() {
-    const system = document.getElementById('system').value;
+    const systemStr = this.systems.length > 0 ? this.systems.join(' + ') : 'Test';
     const trackSelect = document.getElementById('track');
     const trackName = trackSelect.selectedOptions[0]?.textContent || 'Unknown Track';
     const date = new Date().toISOString().split('T')[0];
-    const autoName = `${system} on ${trackName} — ${date}`;
+    const autoName = `${systemStr} on ${trackName} — ${date}`;
     document.getElementById('test-name').value = autoName;
   }
 
   nextStep() {
+    // Validate before moving from Step 3
+    if (this.currentStep === 3 && this.systems.length === 0) {
+      alert('Please add at least one system under test');
+      return;
+    }
+
     this.currentStep++;
     this.renderStep();
     if (this.currentStep === 2) this.setupMapStep();
@@ -206,11 +270,18 @@ class UploadWizard {
   }
 
   async doPublish(status) {
+    // Validate systems
+    if (this.systems.length === 0) {
+      alert('Please add at least one system under test');
+      return;
+    }
+
     try {
       // Collect metadata
       const metadata = {
         category: document.getElementById('category').value,
-        system_under_test: document.getElementById('system').value,
+        system_under_test: this.systems.join(', '),
+        systems: this.systems,
         track_id: document.getElementById('track').value,
         custom_name: document.getElementById('test-name').value,
         pilot_lat: parseFloat(document.getElementById('pilot-lat').value),

@@ -97,9 +97,17 @@
         </label>
 
         <label>
-          System Under Test
-          <input type="text" id="system" placeholder="e.g. WalkSnail Avatar Pro 1W" required>
+          Systems Under Test
+          <p class="hint">Add one or more systems being tested (e.g. video link, control link, antenna)</p>
         </label>
+        <div id="systems-container" class="systems-input">
+          <div id="systems-list" class="systems-list"></div>
+          <div class="systems-add">
+            <input type="text" id="system-input" placeholder="e.g. WalkSnail Avatar Pro 1W" maxlength="100">
+            <button type="button" id="system-add-btn" class="btn btn-small">Add</button>
+          </div>
+        </div>
+        <div id="systems-error" style="color: #f44; font-size: 12px; margin-top: 0.25rem;"></div>
 
         <label>
           Track
