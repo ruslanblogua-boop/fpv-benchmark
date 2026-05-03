@@ -47,15 +47,20 @@ class AuthManager {
 
     try {
       const { data: { session } } = await this.supabase.auth.getSession();
+      console.log('[AUTH] Initial session check:', session ? 'Found session' : 'No session');
       if (session) {
+        console.log('[AUTH] User:', session.user?.email);
         this.user = session.user;
         this.token = session.access_token;
+        console.log('[AUTH] Token from session:', this.token?.substring(0, 20) + '...');
         localStorage.setItem('auth_token', this.token);
         if (typeof api !== 'undefined') api.setToken(this.token);
         this.updateUI();
+      } else {
+        console.log('[AUTH] No session found. Waiting for onAuthStateChange...');
       }
     } catch (err) {
-      console.error('Session check failed:', err);
+      console.error('[AUTH] Session check failed:', err);
     }
 
     this.supabase.auth.onAuthStateChange((event, session) => {
