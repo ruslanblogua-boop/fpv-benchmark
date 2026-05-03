@@ -59,9 +59,11 @@ class AuthManager {
     }
 
     this.supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[AUTH] State changed:', event, session?.user?.email);
       if (session) {
         this.user = session.user;
         this.token = session.access_token;
+        console.log('[AUTH] Token set:', this.token?.substring(0, 20) + '...');
         localStorage.setItem('auth_token', this.token);
         if (typeof api !== 'undefined') api.setToken(this.token);
         this.syncUserToBackend();
