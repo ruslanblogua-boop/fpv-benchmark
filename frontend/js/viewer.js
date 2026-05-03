@@ -5,8 +5,10 @@ class HeatmapViewer {
     this.map = null;
     this.heatLayer = null;
     this.pathLayer = null;
+    this.pathCoordinates = [];
     this.currentTest = null;
     this.allTests = [];
+    this.playbackInterval = null;
     this.init();
   }
 
@@ -139,9 +141,10 @@ class HeatmapViewer {
       const heatmap = await api.getTestHeatmap(test.id);
       const path = await api.getTestPath(test.id);
 
-      // Clear previous layers
+      // Clear previous layers and playback
       if (this.heatLayer) this.map.removeLayer(this.heatLayer);
       if (this.pathLayer) this.map.removeLayer(this.pathLayer);
+      if (this.playbackInterval) clearInterval(this.playbackInterval);
 
       // Render heatmap
       this.renderHeatmap(heatmap);
@@ -150,11 +153,19 @@ class HeatmapViewer {
       this.renderPath(path);
 
       // Fit bounds
-      if (path.features.length > 0) {
-        const bounds = L.latLngBounds(
-          path.features.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]])
-        );
-        this.map.fitBounds(bounds, { padding: [50, 50] });
+      if (path && path.features && path.features.length > 0) {
+        const coords = [];
+        path.features.forEach(f => {
+          if (f.geometry && f.geometry.type === 'LineString') {
+            f.geometry.coordinates.forEach(([lon, lat]) => {
+              coords.push([lat, lon]);
+            });
+          }
+        });
+        if (coords.length > 0) {
+          const bounds = L.latLngBounds(coords);
+          this.map.fitBounds(bounds, { padding: [50, 50] });
+        }
       }
 
       // Update test info panel
@@ -165,14 +176,70 @@ class HeatmapViewer {
   }
 
   renderHeatmap(geojson) {
-    // TODO: Render heatmap.geojson with leaflet.heat
-    // Get selected metric from radio buttons
-    // Color scale based on metric values
+    // Render heatmap circles with color based on selected metric
+    const selectedMetric = document.querySelector('input[name="metric"]:checked').value;
+
+    // Extract points and values for heat layer
+    const heatPoints = [];
+    if (geojson.features && geojson.features.length > 0) {
+      geojson.features.forEach(feature => {
+        if (feature.geometry.type === 'Point') {
+          const [lon, lat] = feature.geometry.coordinates;
+          const value = feature.properties?.[selectedMetric] || 0;
+          heatPoints.push([lat, lon, value]);
+        }
+      });
+    }
+
+    // Create heat layer
+    if (heatPoints.length > 0) {
+      this.heatLayer = L.heatLayer(heatPoints, {
+        radius: 25,
+        blur: 15,
+        max: 1.0,
+        minOpacity: 0.3,
+        gradient: {
+          0.0: '#0000ff',  // Blue
+          0.25: '#00ff00', // Green
+          0.5: '#ffff00',  // Yellow
+          0.75: '#ff8800', // Orange
+          1.0: '#ff0000'   // Red
+        }
+      }).addTo(this.map);
+    }
   }
 
   renderPath(geojson) {
-    // TODO: Render path as dashed line overlay
-    // Store for playback slider
+    // Render path as a dashed polyline overlay
+    if (geojson.features && geojson.features.length > 0) {
+      const pathCoordinates = [];
+
+      geojson.features.forEach(feature => {
+        if (feature.geometry.type === 'LineString') {
+          feature.geometry.coordinates.forEach(([lon, lat]) => {
+            pathCoordinates.push([lat, lon]);
+          });
+        }
+      });
+
+      if (pathCoordinates.length > 0) {
+        this.pathLayer = L.polyline(pathCoordinates, {
+          color: 'cyan',
+          weight: 3,
+          opacity: 0.8,
+          dashArray: '5, 5',
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(this.map);
+
+        // Store for playback
+        this.pathCoordinates = pathCoordinates;
+        if (this.pathCoordinates.length > 0) {
+          const slider = document.getElementById('playback-slider');
+          slider.max = this.pathCoordinates.length - 1;
+        }
+      }
+    }
   }
 
   renderTestInfo(test) {
@@ -192,19 +259,78 @@ class HeatmapViewer {
   }
 
   updateHeatmap() {
-    // TODO: Re-render heatmap with new metric selected
+    // Re-render heatmap with new metric selected
+    if (this.currentTest) {
+      api.getTestHeatmap(this.currentTest.id)
+        .then(heatmap => {
+          if (this.heatLayer) this.map.removeLayer(this.heatLayer);
+          this.renderHeatmap(heatmap);
+        })
+        .catch(err => console.error('Failed to update heatmap:', err));
+    }
   }
 
   toggleCompareMode() {
-    // TODO: Allow second test selection for side-by-side comparison
+    // Allow second test selection for side-by-side comparison
+    const btn = document.getElementById('compare-mode');
+    if (btn.classList.contains('active')) {
+      btn.classList.remove('active');
+      btn.textContent = 'Compare Mode';
+      // TODO: Clear comparison overlay
+    } else {
+      btn.classList.add('active');
+      btn.textContent = 'Compare Mode (Select 2nd Test)';
+      // TODO: Allow selecting second test
+    }
   }
 
   togglePlayback() {
-    // TODO: Animate drone along path
+    const btn = document.getElementById('playback-play');
+    if (btn.classList.contains('playing')) {
+      btn.classList.remove('playing');
+      btn.textContent = 'Play';
+      clearInterval(this.playbackInterval);
+    } else {
+      btn.classList.add('playing');
+      btn.textContent = 'Stop';
+      this.startPlayback();
+    }
+  }
+
+  startPlayback() {
+    if (!this.pathCoordinates || this.pathCoordinates.length === 0) return;
+
+    const slider = document.getElementById('playback-slider');
+    let currentIndex = parseInt(slider.value) || 0;
+
+    this.playbackInterval = setInterval(() => {
+      currentIndex++;
+      if (currentIndex >= this.pathCoordinates.length) {
+        currentIndex = 0;
+      }
+      slider.value = currentIndex;
+      this.updatePlayback();
+    }, 100);
   }
 
   updatePlayback() {
-    // TODO: Update playback position based on slider
+    const slider = document.getElementById('playback-slider');
+    const timeDisplay = document.getElementById('playback-time');
+    const index = parseInt(slider.value) || 0;
+
+    if (this.pathCoordinates && index < this.pathCoordinates.length) {
+      const coord = this.pathCoordinates[index];
+      this.map.setView(coord, this.map.getZoom());
+
+      // Update time display
+      const totalPoints = this.pathCoordinates.length;
+      const percentage = index / totalPoints;
+      const duration = this.currentTest?.duration_s || totalPoints;
+      const currentTime = Math.floor(duration * percentage);
+      const minutes = Math.floor(currentTime / 60);
+      const seconds = currentTime % 60;
+      timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
   }
 }
 
