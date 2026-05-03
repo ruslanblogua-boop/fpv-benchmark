@@ -17,7 +17,7 @@ bucket_name = "fpv-heatmap-storage"
 # ── Environment variables ─────────────────────────────────────────────────────
 [vars]
 SUPABASE_URL = "https://fkbjviqahbonwtwjutkc.supabase.co"
-FRONTEND_URL = "https://localhost:8787"
+FRONTEND_URL = "https://moonlet-9sg.pages.dev"
 
 # Secrets (set via: wrangler secret put SUPABASE_JWT_SECRET)
 # SUPABASE_JWT_SECRET
