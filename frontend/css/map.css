@@ -184,7 +184,7 @@
 .test-detail-panel {
   position: absolute;
   bottom: 20px;
-  right: 20px;
+  left: 20px;
   width: 300px;
   max-height: 400px;
   background: var(--bg-darker);

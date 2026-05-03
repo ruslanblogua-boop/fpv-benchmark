@@ -113,7 +113,12 @@
           Track
           <select id="track" required>
             <option value="">Select a track...</option>
+            <option value="__new__">+ Create new track</option>
           </select>
+          <div id="new-track" class="hidden">
+            <input type="text" placeholder="Track name" id="track-name">
+            <input type="text" placeholder="Location (e.g. Warsaw, Poland)" id="track-location">
+          </div>
         </label>
 
         <label>
@@ -134,7 +139,7 @@
 
         <label>
           Test Name
-          <input type="text" id="test-name" placeholder="Auto-generated name" readonly>
+          <input type="text" id="test-name" placeholder="Auto-generated name" required>
         </label>
 
         <label>

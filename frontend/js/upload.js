@@ -49,7 +49,7 @@ class UploadWizard {
     document.getElementById('step-3-back').addEventListener('click', () => this.prevStep());
     document.getElementById('step-3-next').addEventListener('click', () => this.nextStep());
     document.getElementById('profile').addEventListener('change', (e) => this.onProfileChange(e));
-    document.getElementById('track').addEventListener('change', () => this.updateTestName());
+    document.getElementById('track').addEventListener('change', (e) => this.onTrackChange(e));
     document.getElementById('system-add-btn').addEventListener('click', () => this.addSystem());
     document.getElementById('system-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -126,6 +126,12 @@ class UploadWizard {
   onProfileChange(e) {
     const isNew = e.target.value === '';
     document.getElementById('new-profile').classList.toggle('hidden', !isNew);
+  }
+
+  onTrackChange(e) {
+    const isNew = e.target.value === '__new__';
+    document.getElementById('new-track').classList.toggle('hidden', !isNew);
+    this.updateTestName();
   }
 
   addSystem() {
@@ -276,14 +282,50 @@ class UploadWizard {
       return;
     }
 
+    // Validate track
+    const trackSelect = document.getElementById('track');
+    let trackId = trackSelect.value;
+
+    if (trackId === '__new__') {
+      const trackName = document.getElementById('track-name').value.trim();
+      const trackLocation = document.getElementById('track-location').value.trim();
+
+      if (!trackName) {
+        alert('Please enter a track name or select an existing track');
+        return;
+      }
+
+      // Create new track
+      try {
+        const track = await api.createTrack({
+          name: trackName,
+          location: trackLocation || 'Unknown',
+        });
+        trackId = track.id;
+      } catch (err) {
+        alert('Failed to create track: ' + err.message);
+        return;
+      }
+    } else if (!trackId) {
+      alert('Please select a track');
+      return;
+    }
+
+    // Validate test name
+    const testName = document.getElementById('test-name').value.trim();
+    if (!testName) {
+      alert('Please enter a test name');
+      return;
+    }
+
     try {
       // Collect metadata
       const metadata = {
         category: document.getElementById('category').value,
         system_under_test: this.systems.join(', '),
         systems: this.systems,
-        track_id: document.getElementById('track').value,
-        custom_name: document.getElementById('test-name').value,
+        track_id: trackId,
+        custom_name: testName,
         pilot_lat: parseFloat(document.getElementById('pilot-lat').value),
         pilot_lon: parseFloat(document.getElementById('pilot-lon').value),
         pilot_bearing_deg: parseInt(document.getElementById('pilot-bearing').value),
