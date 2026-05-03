@@ -12,12 +12,15 @@ const initSupabase = async () => {
   if (supabase) return supabase;
 
   const config = getSupabaseConfig();
-  if (!window.supabase || !window.supabase.createClient) {
+  if (!window.createClient && !window.supabase?.createClient) {
     console.warn('Supabase client not loaded. Waiting...');
-    return null;
+    // Retry in 100ms
+    await new Promise(r => setTimeout(r, 100));
+    return initSupabase();
   }
 
-  supabase = window.supabase.createClient(config.url, config.key);
+  const createClientFn = window.createClient || window.supabase.createClient;
+  supabase = createClientFn(config.url, config.key);
   return supabase;
 };
 
