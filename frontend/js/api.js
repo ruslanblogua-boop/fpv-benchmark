@@ -1,6 +1,15 @@
 // API wrapper for fpv-heatmap Worker
 
-const API_BASE = 'https://fpv-heatmap-api.moonlet.workers.dev';
+const getAPIBase = () => {
+  // Support three ways to configure API endpoint:
+  // 1. Environment variable (for build-time config)
+  // 2. localStorage (set by user or during auth setup)
+  // 3. Default fallback
+  if (typeof window !== 'undefined' && window.VITE_API_URL) {
+    return window.VITE_API_URL;
+  }
+  return localStorage.getItem('api_base') || 'https://fpv-heatmap-api.moonlet.workers.dev';
+};
 
 class FPVApi {
   constructor() {
@@ -9,7 +18,15 @@ class FPVApi {
 
   setToken(token) {
     this.token = token;
-    localStorage.setItem('auth_token', token);
+    if (token) {
+      localStorage.setItem('auth_token', token);
+    } else {
+      localStorage.removeItem('auth_token');
+    }
+  }
+
+  setAPIBase(url) {
+    localStorage.setItem('api_base', url);
   }
 
   async request(method, path, body = null) {
@@ -28,7 +45,7 @@ class FPVApi {
       opts.body = JSON.stringify(body);
     }
 
-    const res = await fetch(`${API_BASE}${path}`, opts);
+    const res = await fetch(`${getAPIBase()}${path}`, opts);
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Unknown error' }));
       throw new Error(err.error || `${res.status} ${res.statusText}`);

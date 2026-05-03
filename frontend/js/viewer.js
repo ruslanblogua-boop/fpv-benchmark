@@ -47,10 +47,13 @@ class HeatmapViewer {
       });
     });
 
-    // Topbar login/settings (placeholder)
+    // Topbar login (handled by auth.js)
     document.getElementById('topbar-login').addEventListener('click', () => {
-      console.log('Login clicked');
-      // TODO: Implement login modal
+      if (auth.isAuthenticated()) {
+        auth.logout();
+      } else {
+        auth.login();
+      }
     });
 
     document.getElementById('topbar-settings').addEventListener('click', () => {
