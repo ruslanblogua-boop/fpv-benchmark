@@ -2,7 +2,7 @@
 const getSupabaseConfig = () => {
   return {
     url: localStorage.getItem('supabase_url') || 'https://fkbjviqahbonwtwjutkc.supabase.co',
-    key: localStorage.getItem('supabase_key') || '',
+    key: localStorage.getItem('supabase_key') || 'sb_publishable_eU3NrG3c9pRgJ1p-3QpPpA_iOdqNfsm',
   };
 };
 
