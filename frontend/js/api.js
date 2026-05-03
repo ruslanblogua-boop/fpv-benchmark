@@ -56,103 +56,103 @@ class FPVApi {
   // Auth
   async syncUser(token) {
     this.setToken(token);
-    return this.request('POST', '/auth/sync');
+    return this.request('POST', '/api/auth/sync');
   }
 
   async getMe() {
-    return this.request('GET', '/me');
+    return this.request('GET', '/api/me');
   }
 
   async updateMe(updates) {
-    return this.request('PUT', '/me', updates);
+    return this.request('PUT', '/api/me', updates);
   }
 
   // Tracks
   async getTracks() {
-    return this.request('GET', '/tracks');
+    return this.request('GET', '/api/tracks');
   }
 
   async getTrack(slug) {
-    return this.request('GET', `/tracks/${slug}`);
+    return this.request('GET', `/api/tracks/${slug}`);
   }
 
   async createTrack(track) {
-    return this.request('POST', '/tracks', track);
+    return this.request('POST', '/api/tracks', track);
   }
 
   async updateTrack(slug, updates) {
-    return this.request('PUT', `/tracks/${slug}`, updates);
+    return this.request('PUT', `/api/tracks/${slug}`, updates);
   }
 
   async promoteTrack(slug) {
-    return this.request('POST', `/tracks/${slug}/promote`);
+    return this.request('POST', `/api/tracks/${slug}/promote`);
   }
 
   // Tests
   async getTests(filters = {}) {
     const params = new URLSearchParams(filters);
-    return this.request('GET', `/tests?${params}`);
+    return this.request('GET', `/api/tests?${params}`);
   }
 
   async getTest(id) {
-    return this.request('GET', `/tests/${id}`);
+    return this.request('GET', `/api/tests/${id}`);
   }
 
   async getTestHeatmap(id) {
-    return this.request('GET', `/tests/${id}/geojson/heatmap`);
+    return this.request('GET', `/api/tests/${id}/geojson/heatmap`);
   }
 
   async getTestPath(id) {
-    return this.request('GET', `/tests/${id}/geojson/path`);
+    return this.request('GET', `/api/tests/${id}/geojson/path`);
   }
 
   async getMyTests() {
-    return this.request('GET', '/me/tests');
+    return this.request('GET', '/api/me/tests');
   }
 
   async createTest(test) {
-    return this.request('POST', '/tests', test);
+    return this.request('POST', '/api/tests', test);
   }
 
   async updateTest(id, updates) {
-    return this.request('PUT', `/tests/${id}`, updates);
+    return this.request('PUT', `/api/tests/${id}`, updates);
   }
 
   async publishTest(id) {
-    return this.request('POST', `/tests/${id}/publish`);
+    return this.request('POST', `/api/tests/${id}/publish`);
   }
 
   async deleteTest(id) {
-    return this.request('DELETE', `/tests/${id}`);
+    return this.request('DELETE', `/api/tests/${id}`);
   }
 
   // Profiles
   async getProfiles() {
-    return this.request('GET', '/me/profiles');
+    return this.request('GET', '/api/me/profiles');
   }
 
   async createProfile(profile) {
-    return this.request('POST', '/me/profiles', profile);
+    return this.request('POST', '/api/me/profiles', profile);
   }
 
   async updateProfile(id, updates) {
-    return this.request('PUT', `/me/profiles/${id}`, updates);
+    return this.request('PUT', `/api/me/profiles/${id}`, updates);
   }
 
   async deleteProfile(id) {
-    return this.request('DELETE', `/me/profiles/${id}`);
+    return this.request('DELETE', `/api/me/profiles/${id}`);
   }
 
   // Upload
   async uploadHeatmap(testId, geojson) {
-    return this.request('POST', '/upload/heatmap', {
+    return this.request('POST', '/api/upload/heatmap', {
       test_id: testId,
       data: geojson,
     });
   }
 
   async uploadPath(testId, geojson) {
-    return this.request('POST', '/upload/path', {
+    return this.request('POST', '/api/upload/path', {
       test_id: testId,
       data: geojson,
     });

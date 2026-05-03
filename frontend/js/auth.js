@@ -1,15 +1,15 @@
 // Supabase Authentication
 const getSupabaseConfig = () => {
   return {
-    url: localStorage.getItem('supabase_url') || 'https://YOUR_SUPABASE_URL.supabase.co',
-    key: localStorage.getItem('supabase_key') || 'YOUR_SUPABASE_ANON_KEY',
+    url: localStorage.getItem('supabase_url') || 'https://fkbjviqahbonwtwjutkc.supabase.co',
+    key: localStorage.getItem('supabase_key') || '',
   };
 };
 
-let supabase = null;
+let _supabaseClient = null;
 
 const initSupabase = async () => {
-  if (supabase) return supabase;
+  if (_supabaseClient) return _supabaseClient;
 
   const config = getSupabaseConfig();
   if (!window.createClient && !window.supabase?.createClient) {
@@ -20,8 +20,8 @@ const initSupabase = async () => {
   }
 
   const createClientFn = window.createClient || window.supabase.createClient;
-  supabase = createClientFn(config.url, config.key);
-  return supabase;
+  _supabaseClient = createClientFn(config.url, config.key);
+  return _supabaseClient;
 };
 
 class AuthManager {
