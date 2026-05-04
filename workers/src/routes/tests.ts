@@ -45,10 +45,26 @@ function numeric(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function getHomeAltitude(points: Array<{ altitude_m: number | null }>) {
+  const altitudePoints = points.filter((point) => point.altitude_m !== null);
+  if (altitudePoints.length === 0) return null;
+
+  const firstAltitude = altitudePoints[0].altitude_m;
+  const lastAltitude = altitudePoints[altitudePoints.length - 1].altitude_m;
+
+  if (firstAltitude === null && lastAltitude === null) return null;
+  if (firstAltitude === null) return lastAltitude;
+  if (lastAltitude === null) return firstAltitude;
+
+  return Math.abs(firstAltitude - lastAltitude) <= 0.5
+    ? (firstAltitude + lastAltitude) / 2
+    : Math.min(firstAltitude, lastAltitude);
+}
+
 function getTrackPoints(preparedTestJson: any) {
   if (!preparedTestJson || !Array.isArray(preparedTestJson.track)) return [];
 
-  return preparedTestJson.track
+  const points = preparedTestJson.track
     .map((point: any, index: number) => {
       const lat = numeric(point?.lat);
       const lon = numeric(point?.lon);
@@ -62,7 +78,7 @@ function getTrackPoints(preparedTestJson: any) {
         t: numeric(point?.t) ?? index,
         lat,
         lon,
-        altitude_m: numeric(point?.altitude_m) ?? numeric(point?.relative_altitude_m) ?? 0,
+        altitude_m: numeric(point?.altitude_m) ?? numeric(point?.relative_altitude_m),
         speed_ms: speedMs ?? (groundSpeedKmh !== null ? groundSpeedKmh / 3.6 : 0),
         bitrate_mbps: numeric(point?.vtx_bitrate_mbps) ?? 0,
         video_signal: numeric(point?.vtx_link_quality) ?? 0,
@@ -74,6 +90,13 @@ function getTrackPoints(preparedTestJson: any) {
       };
     })
     .filter(Boolean);
+
+  const homeAltitude = getHomeAltitude(points);
+  return points.map((point: any) => ({
+    ...point,
+    altitude_from_home_m: point.altitude_m !== null && homeAltitude !== null ? point.altitude_m - homeAltitude : null,
+    home_altitude_m: homeAltitude,
+  }));
 }
 
 function buildPathGeoJSON(preparedTestJson: any) {
@@ -104,6 +127,8 @@ function buildPathGeoJSON(preparedTestJson: any) {
       properties: {
         t: point.t,
         altitude_m: point.altitude_m,
+        altitude_from_home_m: point.altitude_from_home_m,
+        home_altitude_m: point.home_altitude_m,
         speed_ms: point.speed_ms,
         distance_from_home_m: point.distance_from_home_m,
         heatmap_score: point.heatmap_score,
@@ -137,8 +162,11 @@ function buildHeatmapGeoJSON(preparedTestJson: any) {
         avg_bitrate: point.bitrate_mbps,
         video_signal: point.video_signal,
         avg_video_signal: point.video_signal,
-        altitude: point.altitude_m,
-        avg_altitude: point.altitude_m,
+        altitude: point.altitude_from_home_m,
+        avg_altitude: point.altitude_from_home_m,
+        altitude_m: point.altitude_m,
+        altitude_from_home_m: point.altitude_from_home_m,
+        home_altitude_m: point.home_altitude_m,
         speed: point.speed_ms,
         avg_speed: point.speed_ms,
         delay_ms: point.delay_ms,

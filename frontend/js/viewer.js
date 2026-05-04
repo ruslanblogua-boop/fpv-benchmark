@@ -39,10 +39,10 @@ class HeatmapViewer {
 
   async init() {
     this.map = L.map('map').setView([52.18, 21.13], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© CartoDB',
       maxZoom: 19,
-      opacity: 0.84,
+      opacity: 0.96,
     }).addTo(this.map);
 
     this.attachEventListeners();
@@ -516,12 +516,14 @@ class HeatmapViewer {
     const speedMs = Number.isFinite(Number(properties.speed_ms))
       ? Number(properties.speed_ms)
       : (Number.isFinite(Number(properties.ground_speed_kmh)) ? Number(properties.ground_speed_kmh) / 3.6 : Number(properties.speed || properties.avg_speed));
+    const altitudeFromHome = Number(properties.altitude_from_home_m ?? properties.altitude ?? properties.altitude_m ?? properties.avg_altitude);
     return `
       <div class="data-point-popup">
         <strong>${config.label}</strong>
         <div>${this.formatMetricValue(this.pickMetricValue(properties, config.keys), config.unit)}</div>
         ${Number.isFinite(Number(properties.distance_from_home_m)) ? `<div>Distance from home: ${Math.round(Number(properties.distance_from_home_m))} m</div>` : ''}
-        ${Number.isFinite(Number(properties.altitude || properties.altitude_m || properties.avg_altitude)) ? `<div>Altitude from home: ${Math.round(Number(properties.altitude || properties.altitude_m || properties.avg_altitude))} m</div>` : ''}
+        ${Number.isFinite(altitudeFromHome) ? `<div>Altitude from home: ${Math.round(altitudeFromHome)} m</div>` : ''}
+        ${Number.isFinite(Number(properties.home_altitude_m)) ? `<div>Home altitude: ${Math.round(Number(properties.home_altitude_m) * 10) / 10} m</div>` : ''}
         ${Number.isFinite(speedMs) ? `<div>Speed: ${Math.round(speedMs * 10) / 10} m/s</div>` : ''}
         ${Number.isFinite(Number(properties.delay_ms)) ? `<div>Delay: ${Math.round(Number(properties.delay_ms))} ms</div>` : ''}
         ${Number.isFinite(Number(properties.bitrate || properties.avg_bitrate || properties.vtx_bitrate_mbps)) ? `<div>Bitrate: ${Math.round(Number(properties.bitrate || properties.avg_bitrate || properties.vtx_bitrate_mbps) * 10) / 10} Mbps</div>` : ''}

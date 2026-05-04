@@ -574,7 +574,7 @@
 }
 
 #map .leaflet-tile {
-  filter: brightness(0.72) saturate(0.82) contrast(1.05);
+  filter: brightness(0.92) saturate(1.18) contrast(1.06);
 }
 
 .sidebar {
@@ -649,11 +649,11 @@
   left: 24px;
   bottom: 24px;
   width: min(390px, calc(100vw - 48px));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 22px;
-  background: linear-gradient(180deg, rgba(9, 12, 18, 0.92), rgba(15, 18, 24, 0.97));
+  background: linear-gradient(180deg, rgba(9, 12, 18, 0.98), rgba(14, 17, 23, 0.99));
   backdrop-filter: blur(18px);
-  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
@@ -677,14 +677,14 @@
 }
 
 #test-info dt {
-  color: #8d95a5;
+  color: #aeb7c8;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 #test-info dd {
-  color: #eef2f7;
+  color: #f5f7fb;
   font-size: 15px;
   line-height: 1.35;
 }
@@ -715,9 +715,13 @@
 }
 
 .playback-controls {
-  background: rgba(255, 255, 255, 0.03);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 1rem;
+}
+
+#playback-time {
+  color: #ffd3b4;
 }
 
 #playback-play {
