@@ -112,6 +112,7 @@ class HeatmapViewer {
 
     const { tests } = await api.getTests(filters);
     this.allTests = tests || [];
+    this.refreshSearchIndex();
     this.renderTestList(this.allTests);
   }
 
@@ -168,35 +169,20 @@ class HeatmapViewer {
     browser.classList.toggle('collapsed', collapsed);
   }
 
-  async loadSearchIndex() {
-    const [testRes, cameraRes] = await Promise.allSettled([
-      api.getTests({}),
-      api.getCameraTests({}),
-    ]);
+  refreshSearchIndex(cameraItems = null) {
+    const linkItems = (this.allTests || []).map((test) => ({
+      id: test.id,
+      type: 'link',
+      label: test.custom_name || test.auto_name || 'Untitled Test',
+      meta: test.system_under_test || test.track_name || 'Link benchmark',
+      raw: test,
+    }));
 
-    const linkItems = testRes.status === 'fulfilled'
-      ? (testRes.value.tests || []).map((test) => ({
-        id: test.id,
-        type: 'link',
-        label: test.custom_name || test.auto_name || 'Untitled Test',
-        meta: test.system_under_test || test.track_name || 'Link benchmark',
-        raw: test,
-      }))
-      : [];
-
-    const cameraItems = cameraRes.status === 'fulfilled'
-      ? (cameraRes.value.camera_tests || []).map((item) => ({
-        id: item.id,
-        type: 'camera',
-        label: item.combo_name || item.camera_name || 'Camera combo',
-        meta: item.summary || item.scene_name || 'Camera benchmark',
-        raw: item,
-      }))
-      : [];
+    const nextCameraItems = cameraItems ?? this.searchIndex.filter((item) => item.type === 'camera');
 
     this.searchIndex = [
       ...linkItems,
-      ...cameraItems,
+      ...nextCameraItems,
       {
         id: 'battery-placeholder',
         type: 'battery',
@@ -205,6 +191,21 @@ class HeatmapViewer {
         raw: null,
       },
     ];
+  }
+
+  async loadSearchIndex() {
+    this.refreshSearchIndex();
+
+    const cameraRes = await api.getCameraTests({}).catch(() => ({ camera_tests: [] }));
+    const cameraItems = (cameraRes.camera_tests || []).map((item) => ({
+      id: item.id,
+      type: 'camera',
+      label: item.combo_name || item.camera_name || 'Camera combo',
+      meta: item.summary || item.scene_name || 'Camera benchmark',
+      raw: item,
+    }));
+
+    this.refreshSearchIndex(cameraItems);
   }
 
   renderTopbarSearch(query = '') {
