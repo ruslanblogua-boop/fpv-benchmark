@@ -36,7 +36,28 @@ export const handleTracks = {
 
       const trackId = generateId();
       const slug = slugify(body.name);
-      const location = body.location || 'Unknown';
+      const location = body.location?.trim() || 'Unknown';
+
+      const existingTrack = await env.DB.prepare(
+        'SELECT id, name, slug, location_name FROM tracks WHERE slug = ?'
+      ).bind(slug).first<{ id: string; name: string; slug: string; location_name?: string }>();
+
+      if (existingTrack) {
+        if ((!existingTrack.location_name || existingTrack.location_name === 'Unknown') && location !== 'Unknown') {
+          await env.DB.prepare(
+            'UPDATE tracks SET location_name = ? WHERE id = ?'
+          ).bind(location, existingTrack.id).run();
+          existingTrack.location_name = location;
+        }
+
+        return jsonResponse({
+          id: existingTrack.id,
+          name: existingTrack.name,
+          slug: existingTrack.slug,
+          location_name: existingTrack.location_name || 'Unknown',
+          reused: true,
+        }, 200, env);
+      }
 
       await env.DB.prepare(
         'INSERT INTO tracks (id, name, slug, location_name, created_by) VALUES (?, ?, ?, ?, ?)'
