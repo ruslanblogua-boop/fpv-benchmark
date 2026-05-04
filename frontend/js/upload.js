@@ -4,6 +4,8 @@ class UploadWizard {
   constructor() {
     this.currentStep = 1;
     this.uploadedTestData = null;
+    this.trimStart = 0;
+    this.trimEnd = 0;
     this.mapSetup = null;
     this.metadata = null;
     this.systems = [];
@@ -40,6 +42,8 @@ class UploadWizard {
   attachEventListeners() {
     // Step 1: File upload
     document.getElementById('file-test-json').addEventListener('change', (e) => this.onTestJsonSelect(e));
+    document.getElementById('trim-start').addEventListener('input', () => this.onTrimChange());
+    document.getElementById('trim-end').addEventListener('input', () => this.onTrimChange());
     document.getElementById('step-1-next').addEventListener('click', () => this.nextStep());
 
     // Step 2: Map setup
@@ -89,6 +93,10 @@ class UploadWizard {
         const parsed = JSON.parse(evt.target.result);
         this.validateTestJson(parsed);
         this.uploadedTestData = parsed;
+        this.trimStart = 0;
+        this.trimEnd = Math.max((this.uploadedTestData.track?.length || 1) - 1, 0);
+        document.getElementById('trim-start').value = String(this.trimStart);
+        document.getElementById('trim-end').value = String(this.trimEnd);
         document.getElementById('test-json-preview').textContent = `✓ ${file.name} (${this.uploadedTestData.track?.length || 0} samples)`;
         this.checkFilesReady();
       } catch (err) {
@@ -121,17 +129,98 @@ class UploadWizard {
     }
 
     this.applyUploadedDefaults();
+    this.renderTrimSummary();
     this.renderNormalizedPreview();
     btn.disabled = false;
   }
 
+  isValidCoordinate(point) {
+    const lat = Number(point?.lat);
+    const lon = Number(point?.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return false;
+    if (lat === 0 && lon === 0) return false;
+    return true;
+  }
+
+  haversineMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2
+      + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  getRawTrack() {
+    return Array.isArray(this.uploadedTestData?.track) ? this.uploadedTestData.track : [];
+  }
+
+  getTrimmedTrack() {
+    const rawTrack = this.getRawTrack();
+    if (rawTrack.length === 0) return [];
+
+    const safeStart = Math.max(0, Math.min(this.trimStart, rawTrack.length - 1));
+    const safeEnd = Math.max(safeStart, Math.min(this.trimEnd, rawTrack.length - 1));
+    return rawTrack.slice(safeStart, safeEnd + 1);
+  }
+
   getTrackPoints() {
-    if (!Array.isArray(this.uploadedTestData?.track)) return [];
-    return this.uploadedTestData.track.filter(point =>
-      point &&
-      Number.isFinite(point.lat) &&
-      Number.isFinite(point.lon)
-    );
+    return this.getTrimmedTrack().filter((point) => this.isValidCoordinate(point));
+  }
+
+  detectTeleports() {
+    const points = this.getTrackPoints();
+    const flagged = [];
+
+    for (let index = 1; index < points.length; index += 1) {
+      const prev = points[index - 1];
+      const current = points[index];
+      const distanceM = this.haversineMeters(prev.lat, prev.lon, current.lat, current.lon);
+      const prevT = Number(prev.t);
+      const currentT = Number(current.t);
+      const dtSeconds = Number.isFinite(prevT) && Number.isFinite(currentT) && currentT > prevT
+        ? (currentT - prevT) / 1000
+        : 1;
+      const speedMs = distanceM / Math.max(dtSeconds, 0.2);
+
+      if (distanceM > 120 || speedMs > 80) {
+        flagged.push({
+          index,
+          distanceM,
+          speedMs,
+        });
+      }
+    }
+
+    return flagged;
+  }
+
+  onTrimChange() {
+    const rawTrack = this.getRawTrack();
+    if (rawTrack.length === 0) return;
+
+    const startInput = document.getElementById('trim-start');
+    const endInput = document.getElementById('trim-end');
+    const startValue = Math.max(0, Math.min(parseInt(startInput.value || '0', 10) || 0, rawTrack.length - 1));
+    const endValue = Math.max(startValue, Math.min(parseInt(endInput.value || '0', 10) || 0, rawTrack.length - 1));
+
+    this.trimStart = startValue;
+    this.trimEnd = endValue;
+    startInput.value = String(startValue);
+    endInput.value = String(endValue);
+
+    this.renderTrimSummary();
+    this.renderNormalizedPreview();
+  }
+
+  renderTrimSummary() {
+    const rawCount = this.getRawTrack().length;
+    const keptCount = this.getTrimmedTrack().length;
+    const validGpsCount = this.getTrackPoints().length;
+    const teleportCount = this.detectTeleports().length;
+    document.getElementById('trim-summary').textContent = `${keptCount} of ${rawCount} samples kept after trim, ${validGpsCount} with valid GPS coordinates, ${teleportCount} possible GPS teleports flagged.`;
   }
 
   getSystemByType(type) {
@@ -221,6 +310,8 @@ class UploadWizard {
         type: 'VRX',
         name: this.uploadedTestData.video_ground_unit,
         variant: null,
+        includeVideo: true,
+        includeControl: false,
       });
     }
     if (this.uploadedTestData.video_air_unit_model) {
@@ -229,6 +320,8 @@ class UploadWizard {
         type: 'VTX',
         name: this.uploadedTestData.video_air_unit_model,
         variant: null,
+        includeVideo: true,
+        includeControl: false,
       });
     }
     if (this.uploadedTestData.control_rx_model) {
@@ -237,6 +330,8 @@ class UploadWizard {
         type: 'CONTROL_LINK',
         name: this.uploadedTestData.control_rx_model,
         variant: this.uploadedTestData.control_rx_type?.toLowerCase() || null,
+        includeVideo: false,
+        includeControl: true,
       });
     }
 
@@ -252,12 +347,19 @@ class UploadWizard {
       return;
     }
 
+    const rawCount = this.getRawTrack().length;
+    const trimmedCount = this.getTrimmedTrack().length;
+    const validCount = this.getTrackPoints().length;
+    const teleports = this.detectTeleports();
     preview.innerHTML = `
       <strong>Structured Test JSON Ready</strong>
       <div>${this.uploadedTestData.test_name || 'Untitled Test'}</div>
-      <div>${this.uploadedTestData.track.length} track samples</div>
-      <div>${this.uploadedTestData.stats?.gps_samples ?? this.getTrackPoints().length} GPS samples</div>
+      <div>${rawCount} raw samples</div>
+      <div>${trimmedCount} trimmed samples</div>
+      <div>${validCount} valid GPS samples</div>
+      <div>${teleports.length} flagged GPS teleports</div>
       <div>${this.uploadedTestData.captured_at || 'No capture date'}</div>
+      ${teleports.length > 0 ? `<div class="hint">Trim around the flagged jump area before publishing.</div>` : ''}
     `;
   }
 
@@ -348,6 +450,13 @@ class UploadWizard {
 
     try {
       const system = systemManager.addSystem(type, name, variant);
+      if (type === 'CONTROL_LINK') {
+        system.includeVideo = false;
+        system.includeControl = true;
+      } else {
+        system.includeVideo = true;
+        system.includeControl = false;
+      }
       this.systems = systemManager.getAllSystems();
       this.renderSystems();
       this.updateTestName();
@@ -364,11 +473,28 @@ class UploadWizard {
     this.updateTestName();
   }
 
+  toggleSystemBenchmark(systemId, benchmarkKey) {
+    this.systems = this.systems.map((system) => {
+      if (system.id !== systemId) return system;
+      return {
+        ...system,
+        [benchmarkKey]: !system[benchmarkKey],
+      };
+    });
+    this.renderSystems();
+  }
+
   renderSystems() {
     const list = document.getElementById('systems-list');
     list.innerHTML = this.systems.map(system => `
       <div class="system-tag">
-        <span>${systemManager.formatSystemName(system)}</span>
+        <div class="system-tag-copy">
+          <span>${systemManager.formatSystemName(system)}</span>
+          <div class="system-benchmark-toggles">
+            <button type="button" class="${system.includeVideo ? 'active' : ''}" data-system-id="${system.id}" data-benchmark="includeVideo">Video</button>
+            <button type="button" class="${system.includeControl ? 'active' : ''}" data-system-id="${system.id}" data-benchmark="includeControl">Control</button>
+          </div>
+        </div>
         <button type="button" data-system-id="${system.id}" aria-label="Remove system">×</button>
       </div>
     `).join('');
@@ -376,6 +502,11 @@ class UploadWizard {
     list.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        const benchmarkKey = e.target.dataset.benchmark;
+        if (benchmarkKey) {
+          this.toggleSystemBenchmark(e.target.dataset.systemId, benchmarkKey);
+          return;
+        }
         this.removeSystem(e.target.dataset.systemId);
       });
     });
@@ -493,10 +624,11 @@ class UploadWizard {
       <h3>${this.uploadedTestData.test_name || document.getElementById('test-name').value || 'Untitled Test'}</h3>
       <dl>
         <dt>Track</dt><dd>${trackName}</dd>
+        <dt>Benchmarks</dt><dd>Video + Control</dd>
         <dt>Systems</dt><dd>${systemStr || 'Not specified'}</dd>
         <dt>Captured At</dt><dd>${this.uploadedTestData.captured_at || 'Unknown'}</dd>
-        <dt>Track Samples</dt><dd>${this.uploadedTestData.track.length}</dd>
-        <dt>GPS Samples</dt><dd>${this.uploadedTestData.stats?.gps_samples ?? this.getTrackPoints().length}</dd>
+        <dt>Track Samples</dt><dd>${this.getTrimmedTrack().length}</dd>
+        <dt>GPS Samples</dt><dd>${this.getTrackPoints().length}</dd>
         <dt>Flight Duration</dt><dd>${this.uploadedTestData.stats?.flight_duration_s ?? 0}s</dd>
         <dt>Min Bitrate</dt><dd>${this.uploadedTestData.stats?.min_bitrate_mbps ?? 0}</dd>
         <dt>Max Bitrate</dt><dd>${this.uploadedTestData.stats?.max_bitrate_mbps ?? 0}</dd>
@@ -520,9 +652,14 @@ class UploadWizard {
       return;
     }
 
-    // Validate systems
     if (!Array.isArray(this.systems) || this.systems.length === 0) {
-      alert('Please add at least one system under test');
+      alert('Please add the video and control systems used in this flight.');
+      return;
+    }
+
+    const processedTrack = this.getTrackPoints();
+    if (processedTrack.length < 2) {
+      alert('Please keep at least two samples with valid GPS coordinates after trimming.');
       return;
     }
 
@@ -563,42 +700,95 @@ class UploadWizard {
     }
 
     try {
-      // Collect metadata
-      const systemLabels = this.systems.map(s => systemManager.formatSystemName(s)).join(', ');
-      const metadata = {
-        category: document.getElementById('category').value,
-        system_under_test: systemLabels,
-        systems: this.systems.map(s => ({
-          type: s.type,
-          name: s.name,
-          variant: s.variant,
-        })),
-        track_id: trackId,
-        custom_name: testName,
-        pilot_lat: parseFloat(document.getElementById('pilot-lat').value),
-        pilot_lon: parseFloat(document.getElementById('pilot-lon').value),
-        pilot_bearing_deg: parseInt(document.getElementById('pilot-bearing').value),
-        wind_speed: document.getElementById('wind-speed').value || null,
-        wind_direction: document.getElementById('wind-direction').value || null,
-        notes: document.getElementById('notes').value || null,
-        prepared_test_json: this.uploadedTestData,
-        duration_s: this.uploadedTestData?.stats?.flight_duration_s || null,
-        total_distance_m: this.uploadedTestData?.track?.at(-1)?.distance_from_home_m || null,
-      };
+      const pilotLatValue = parseFloat(document.getElementById('pilot-lat').value);
+      const pilotLonValue = parseFloat(document.getElementById('pilot-lon').value);
+      const pilotBearingValue = parseInt(document.getElementById('pilot-bearing').value, 10);
+      const preparedTestJson = this.buildPreparedUploadJson(processedTrack);
 
-      // Create test record
-      const test = await api.createTest(metadata);
+      const videoSystems = this.systems.filter((system) => system.includeVideo);
+      const controlSystems = this.systems.filter((system) => system.includeControl);
 
-      // Publish if needed
-      if (status === 'published') {
-        await api.publishTest(test.id);
+      if (videoSystems.length === 0 || controlSystems.length === 0) {
+        alert('Select at least one system for Video and one for Control before publishing.');
+        return;
       }
 
-      alert(`Test ${status === 'draft' ? 'saved as draft' : 'published'}!`);
+      const benchmarkDefinitions = [
+        {
+          category: 'video',
+          suffix: 'Video',
+          systems: videoSystems,
+        },
+        {
+          category: 'control',
+          suffix: 'Control',
+          systems: controlSystems,
+        },
+      ];
+
+      const createdTests = [];
+      for (const benchmark of benchmarkDefinitions) {
+        const metadata = {
+          category: benchmark.category,
+          system_under_test: benchmark.systems.map((system) => systemManager.formatSystemName(system)).join(' + '),
+          systems: benchmark.systems.map((system) => ({
+            type: system.type,
+            name: system.name,
+            variant: system.variant,
+          })),
+          track_id: trackId,
+          custom_name: `${testName} — ${benchmark.suffix}`,
+          pilot_lat: Number.isFinite(pilotLatValue) ? pilotLatValue : null,
+          pilot_lon: Number.isFinite(pilotLonValue) ? pilotLonValue : null,
+          pilot_bearing_deg: Number.isFinite(pilotBearingValue) ? pilotBearingValue : null,
+          wind_speed: document.getElementById('wind-speed').value || null,
+          wind_direction: document.getElementById('wind-direction').value || null,
+          notes: document.getElementById('notes').value || null,
+          prepared_test_json: preparedTestJson,
+          duration_s: preparedTestJson?.stats?.flight_duration_s || null,
+          total_distance_m: preparedTestJson?.track?.at(-1)?.distance_from_home_m || null,
+        };
+
+        const created = await api.createTest(metadata);
+        createdTests.push(created);
+
+        if (status === 'published') {
+          await api.publishTest(created.id);
+        }
+      }
+
+      alert(`${createdTests.length} tests ${status === 'draft' ? 'saved as drafts' : 'published'}: Video and Control.`);
       window.location.href = '/';
     } catch (err) {
       alert('Upload failed: ' + err.message);
     }
+  }
+
+  buildPreparedUploadJson(processedTrack) {
+    const firstT = Number(processedTrack[0]?.t);
+    const lastT = Number(processedTrack.at(-1)?.t);
+    const trimmedDuration = Number.isFinite(firstT) && Number.isFinite(lastT) && lastT >= firstT
+      ? (lastT - firstT) / 1000
+      : this.uploadedTestData?.stats?.flight_duration_s || null;
+
+    const teleportWarnings = this.detectTeleports();
+    return {
+      ...this.uploadedTestData,
+      track: processedTrack,
+      stats: {
+        ...(this.uploadedTestData?.stats || {}),
+        gps_samples: processedTrack.length,
+        flight_duration_s: trimmedDuration,
+      },
+      upload_trim: {
+        start_index: this.trimStart,
+        end_index: this.trimEnd,
+      },
+      warnings: [
+        ...(Array.isArray(this.uploadedTestData?.warnings) ? this.uploadedTestData.warnings : []),
+        ...(teleportWarnings.length > 0 ? [`${teleportWarnings.length} possible GPS teleports detected during upload review.`] : []),
+      ],
+    };
   }
 }
 

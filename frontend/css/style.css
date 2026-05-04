@@ -1098,3 +1098,74 @@ textarea:focus {
     flex-direction: column;
   }
 }
+
+.selected-tests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+}
+
+.selected-test-pill,
+.metric-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2a303b;
+  color: var(--fg-light);
+}
+
+.selected-test-pill.active,
+.metric-pill.active {
+  background: rgba(255, 140, 66, 0.16);
+  border-color: rgba(255, 140, 66, 0.32);
+  color: #ffd6bf;
+}
+
+.selected-test-pill strong {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+}
+
+.selected-test-pill em {
+  font-style: normal;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.metric-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.metric-scale {
+  margin-top: 1rem;
+}
+
+.metric-scale label {
+  margin-bottom: 0.5rem;
+}
+
+.metric-legend {
+  margin-top: 0.65rem;
+}
+
+.legend-gradient {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #dc2626 0%, #f59e0b 50%, #22c55e 100%);
+}
+
+.legend-range {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  font-size: 12px;
+  color: var(--fg-muted);
+}

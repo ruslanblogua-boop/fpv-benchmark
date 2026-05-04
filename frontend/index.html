@@ -36,6 +36,12 @@
         <p class="tagline">FPV Systems Benchmarking Platform</p>
       </div>
 
+      <div class="panel selected-tests-panel">
+        <h2>Selected Tests</h2>
+        <div id="selected-tests" class="selected-tests"></div>
+        <button id="add-test-toggle" class="btn">Add Test</button>
+      </div>
+
       <div class="panel test-browser">
         <h2>Tests</h2>
 
@@ -48,12 +54,11 @@
           </label>
 
           <label>
-            Category
+            Test Type
             <select id="filter-category">
-              <option value="">All Categories</option>
-              <option value="link">Link Quality</option>
-              <option value="camera">Camera</option>
-              <option value="battery">Battery</option>
+              <option value="">All Test Types</option>
+              <option value="video">Video</option>
+              <option value="control">Control</option>
             </select>
           </label>
 
@@ -70,18 +75,18 @@
 
       <div class="panel metric-picker">
         <h3>Metric</h3>
-        <div class="metric-options">
-          <label><input type="radio" name="metric" value="rc_snr" checked> RC SNR (dB)</label>
-          <label><input type="radio" name="metric" value="bitrate"> Bitrate (Mbps)</label>
-          <label><input type="radio" name="metric" value="video_signal"> Video Signal (bars)</label>
-          <label><input type="radio" name="metric" value="altitude"> Altitude (m)</label>
-          <label><input type="radio" name="metric" value="speed"> Speed (m/s)</label>
+        <div id="metric-options" class="metric-options"></div>
+        <div class="metric-scale">
+          <label>
+            Scale Shift
+            <input type="range" id="metric-scale-shift" min="-40" max="40" value="0">
+          </label>
+          <div id="metric-legend" class="metric-legend"></div>
         </div>
       </div>
 
       <div class="panel controls">
         <button id="frame-test" class="btn">Frame Test</button>
-        <button id="compare-mode" class="btn">Compare 2 Tests</button>
         <a href="/upload.html" class="btn btn-primary">Upload Test</a>
         <a href="/settings.html" class="btn">Settings</a>
       </div>
@@ -113,8 +118,8 @@
       window.createClient = window.supabase.createClient;
     }
   </script>
-  <script src="js/api.js?v=20260504-2"></script>
-  <script src="js/auth.js?v=20260504-2"></script>
-  <script src="js/viewer.js?v=20260504-2"></script>
+  <script src="js/api.js?v=20260504-5"></script>
+  <script src="js/auth.js?v=20260504-5"></script>
+  <script src="js/viewer.js?v=20260504-5"></script>
 </body>
 </html>

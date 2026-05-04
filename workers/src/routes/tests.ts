@@ -158,6 +158,10 @@ function formatSystemLabel(system: { type?: string; name?: string; variant?: str
 }
 
 function getSystemLabels(test: TestRow) {
+  if (test.category && test.category !== 'link') {
+    return [String(test.system_under_test || '').trim()].filter(Boolean);
+  }
+
   const stats = parseStatsJson(test.stats_json);
   const labelsFromSystems = Array.isArray(stats.systems)
     ? stats.systems.map(formatSystemLabel).filter(Boolean)
@@ -173,6 +177,14 @@ function getSystemLabels(test: TestRow) {
 
 function expandTestRows(rows: TestRow[]) {
   return rows.flatMap((row) => {
+    if (row.category && row.category !== 'link') {
+      return [{
+        ...row,
+        source_test_name: row.custom_name || row.auto_name || 'Untitled Test',
+        system_under_test: row.system_under_test || '',
+      }];
+    }
+
     const labels = getSystemLabels(row);
     const sourceName = row.custom_name || row.auto_name || 'Untitled Test';
 

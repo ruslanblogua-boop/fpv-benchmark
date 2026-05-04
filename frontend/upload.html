@@ -36,6 +36,20 @@
           <div id="test-json-preview" class="file-preview"></div>
         </div>
 
+        <div class="control-panel upload-trim-panel">
+          <label>
+            Trim Start Sample
+            <input type="number" id="trim-start" min="0" step="1" value="0">
+          </label>
+
+          <label>
+            Trim End Sample
+            <input type="number" id="trim-end" min="0" step="1" value="0">
+          </label>
+
+          <p class="hint" id="trim-summary">Trim away takeoff or landing samples before publishing.</p>
+        </div>
+
         <div id="normalized-preview" class="panel file-preview"></div>
 
         <button id="step-1-next" class="btn btn-primary" disabled>Next</button>
@@ -77,12 +91,10 @@
       <div id="step-3" class="step-content">
         <h2>Step 3: Test Metadata</h2>
 
-        <label>
-          Category
-          <select id="category">
-            <option value="link" selected>Link Quality</option>
-          </select>
-        </label>
+        <div class="panel">
+          <h3>Benchmarks Created</h3>
+          <p>This upload will publish two tests from the same flight: one <strong>Video</strong> test and one <strong>Control</strong> test.</p>
+        </div>
 
         <label>
           Systems Under Test
@@ -232,9 +244,9 @@
       window.createClient = window.supabase.createClient;
     }
   </script>
-  <script src="js/api.js?v=20260504-1"></script>
-  <script src="js/auth.js?v=20260504-1"></script>
-  <script src="js/systems.js?v=20260504-1"></script>
-  <script src="js/upload.js?v=20260504-1"></script>
+  <script src="js/api.js?v=20260504-5"></script>
+  <script src="js/auth.js?v=20260504-5"></script>
+  <script src="js/systems.js?v=20260504-5"></script>
+  <script src="js/upload.js?v=20260504-5"></script>
 </body>
 </html>
