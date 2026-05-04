@@ -145,7 +145,14 @@ class HeatmapViewer {
     const button = document.getElementById('add-test-toggle');
     button.classList.toggle('active', this.addMode);
     button.textContent = this.addMode ? 'Pick Test From List' : 'Add Test';
+    this.setBrowserCollapsed(!this.addMode && this.selectedTests.length > 0);
     this.renderTestList(this.allTests);
+  }
+
+  setBrowserCollapsed(collapsed) {
+    const browser = document.querySelector('.test-browser');
+    if (!browser) return;
+    browser.classList.toggle('collapsed', collapsed);
   }
 
   renderTestList(tests) {
@@ -204,6 +211,7 @@ class HeatmapViewer {
       });
     }
     await this.renderBundle(bundle, preserveView);
+    this.setBrowserCollapsed(true);
     this.renderSelectedTests();
   }
 
@@ -222,6 +230,7 @@ class HeatmapViewer {
         this.currentPath = null;
         document.getElementById('test-info').innerHTML = '';
         document.getElementById('compare-info').innerHTML = '';
+        this.setBrowserCollapsed(false);
       }
     }
 
@@ -339,8 +348,8 @@ class HeatmapViewer {
       const normalized = this.normalizeMetric(point.value, min, max, bias, config.invert);
       return L.circleMarker([point.lat, point.lon], {
         radius: 6,
-        weight: 1.5,
-        color: '#111827',
+        weight: 0,
+        color: 'transparent',
         fillColor: this.colorForValue(normalized),
         fillOpacity: 0.9,
       }).bindTooltip(`${config.label}: ${this.formatMetricValue(point.value, config.unit)}`);
@@ -480,6 +489,7 @@ class HeatmapViewer {
   renderLegend(min, max, config) {
     document.getElementById('metric-legend').innerHTML = `
       <div class="legend-gradient"></div>
+      <div class="legend-shift">Scale shift: ${this.scaleShift > 0 ? '+' : ''}${this.scaleShift}% · ${config.invert ? 'green = lower value' : 'green = higher value'}</div>
       <div class="legend-range">
         <span>${this.formatMetricValue(config.invert ? max : min, config.unit)}</span>
         <span>${this.formatMetricValue(config.invert ? min : max, config.unit)}</span>

@@ -17,7 +17,7 @@ const SYSTEM_TYPES = {
     hasVariants: false,
   },
   CONTROL_LINK: {
-    label: 'Control Link',
+    label: 'Receiver / RX',
     category: 'control',
     hasVariants: true,
     variants: [
@@ -25,6 +25,11 @@ const SYSTEM_TYPES = {
       { value: 'diversity', label: 'Diversity' },
       { value: 'gemini', label: 'Gemini' },
     ],
+  },
+  RADIO_TX: {
+    label: 'Transmitter / Radio',
+    category: 'control',
+    hasVariants: false,
   },
 };
 
@@ -57,10 +62,18 @@ class SystemManager {
       type,
       name,
       variant: variant || null,
+      includeVideo: ['VTX', 'VRX'].includes(type),
+      includeControl: ['CONTROL_LINK', 'RADIO_TX'].includes(type),
       createdAt: new Date().toISOString(),
     };
     this.saveSystems();
     return this.systems[id];
+  }
+
+  upsertSystem(system) {
+    this.systems[system.id] = system;
+    this.saveSystems();
+    return system;
   }
 
   getSystem(id) {

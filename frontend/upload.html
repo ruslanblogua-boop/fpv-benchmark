@@ -37,14 +37,25 @@
         </div>
 
         <div class="control-panel upload-trim-panel">
-          <label>
-            Trim Start Sample
-            <input type="number" id="trim-start" min="0" step="1" value="0">
-          </label>
+          <div id="trim-map-preview" class="map-container trim-map-preview"></div>
+
+          <div class="trim-range-group">
+            <label>
+              Trim Start
+              <input type="range" id="trim-start-range" min="0" max="0" step="1" value="0">
+              <input type="number" id="trim-start" min="0" step="1" value="0">
+            </label>
+
+            <label>
+              Trim End
+              <input type="range" id="trim-end-range" min="0" max="0" step="1" value="0">
+              <input type="number" id="trim-end" min="0" step="1" value="0">
+            </label>
+          </div>
 
           <label>
-            Trim End Sample
-            <input type="number" id="trim-end" min="0" step="1" value="0">
+            Timeline Preview
+            <div id="trim-timeline" class="trim-timeline"></div>
           </label>
 
           <p class="hint" id="trim-summary">Trim away takeoff or landing samples before publishing.</p>
@@ -96,20 +107,35 @@
           <p>This upload will publish two tests from the same flight: one <strong>Video</strong> test and one <strong>Control</strong> test.</p>
         </div>
 
-        <label>
-          Systems Under Test
-          <p class="hint">Select FPV systems being tested in this flight</p>
-        </label>
+        <div class="systems-layout">
+          <div class="panel">
+            <h3>Video Benchmark</h3>
+            <p class="hint">Select the video systems included in the generated <strong>Video</strong> test.</p>
+            <div id="video-systems-list" class="systems-list benchmark-systems-list"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Control Benchmark</h3>
+            <p class="hint">Select the radio and receiver systems included in the generated <strong>Control</strong> test.</p>
+            <div id="control-systems-list" class="systems-list benchmark-systems-list"></div>
+          </div>
+        </div>
+
         <div id="systems-container" class="systems-input">
-          <div id="systems-list" class="systems-list"></div>
-          <button type="button" id="add-system-btn" class="btn btn-small" onclick="(function() { const m = document.getElementById('system-modal'); if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; } })()">+ Add System</button>
+          <button type="button" id="add-system-btn" class="btn btn-small" onclick="(function() { const m = document.getElementById('system-modal'); if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; } })()">+ Search or Add System</button>
         </div>
         <div id="systems-error" style="color: #f44; font-size: 12px; margin-top: 0.25rem;"></div>
 
         <!-- System selection modal -->
         <div id="system-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; z-index: 1000; align-items: center; justify-content: center;">
           <div style="background: var(--bg-darker); border: 1px solid var(--border-dim); border-radius: 4px; padding: 1.5rem; max-width: 500px; width: 90%;">
-            <h3 style="color: var(--accent-cyan); margin-bottom: 1rem;">Add System</h3>
+            <h3 style="color: var(--accent-orange); margin-bottom: 1rem;">Search or Add System</h3>
+
+            <label style="display: block; margin-bottom: 1rem;">
+              Search Existing Systems
+              <input type="text" id="system-search" placeholder="Search saved systems..." style="width: 100%; margin-top: 0.5rem;">
+            </label>
+            <div id="existing-systems-list" class="existing-systems-list" style="margin-bottom: 1rem;"></div>
 
             <label style="display: block; margin-bottom: 1rem;">
               System Type
@@ -117,8 +143,8 @@
                 <option value="">Select a type...</option>
                 <option value="VRX">VRX (Goggle)</option>
                 <option value="VTX">VTX</option>
-                <option value="POWER">Power</option>
-                <option value="CONTROL_LINK">Control Link</option>
+                <option value="CONTROL_LINK">Receiver / RX</option>
+                <option value="RADIO_TX">Transmitter / Radio</option>
               </select>
             </label>
 
