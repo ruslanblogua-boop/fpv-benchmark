@@ -42,7 +42,7 @@ class HeatmapViewer {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
       attribution: '© CartoDB',
       maxZoom: 19,
-      opacity: 0.92,
+      opacity: 0.84,
     }).addTo(this.map);
 
     this.attachEventListeners();

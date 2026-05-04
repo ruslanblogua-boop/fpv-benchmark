@@ -554,6 +554,57 @@ class UploadWizard {
     }
   }
 
+  getTrackLabel() {
+    const trackSelect = document.getElementById('track');
+    if (trackSelect.value === '__new__') {
+      return document.getElementById('track-name').value.trim() || this.uploadedTestData?.test_name || 'Track';
+    }
+    return trackSelect.selectedOptions[0]?.textContent?.trim() || this.uploadedTestData?.test_name || 'Track';
+  }
+
+  getPrimarySystemForBenchmark(benchmark) {
+    if (benchmark.category === 'video') {
+      return benchmark.systems.find((system) => system.type === 'VTX') || benchmark.systems[0] || null;
+    }
+    return benchmark.systems.find((system) => system.type === 'CONTROL_LINK') || benchmark.systems[0] || null;
+  }
+
+  buildBenchmarkTitle(benchmark) {
+    const primary = this.getPrimarySystemForBenchmark(benchmark);
+    const primaryName = primary ? systemManager.formatSystemName(primary) : (benchmark.category === 'video' ? 'Video Test' : 'Control Test');
+    return `${primaryName} - ${this.getTrackLabel()}`;
+  }
+
+  buildBenchmarkFootnote(benchmark) {
+    const primary = this.getPrimarySystemForBenchmark(benchmark);
+    const extras = benchmark.systems
+      .filter((system) => !primary || system.id !== primary.id)
+      .map((system) => {
+        const label = SYSTEM_TYPES[system.type]?.label || system.type;
+        return `${label}: ${systemManager.formatSystemName(system)}`;
+      });
+
+    if (benchmark.category === 'video') {
+      const vtxPower = this.uploadedTestData?.video_air_unit_power_mw;
+      if (Number.isFinite(Number(vtxPower))) {
+        extras.push(`VTX power: ${Number(vtxPower)} mW`);
+      }
+    } else {
+      const radioName = this.uploadedTestData?.control_tx;
+      const hasSelectedRadio = benchmark.systems.some((system) => system.type === 'RADIO_TX');
+      if (radioName && !hasSelectedRadio) {
+        extras.push(`Transmitter / Radio: ${radioName}`);
+      }
+
+      const txPower = this.uploadedTestData?.control_tx_power_mw;
+      if (Number.isFinite(Number(txPower))) {
+        extras.push(`TX power: ${Number(txPower)} mW`);
+      }
+    }
+
+    return extras.join(' · ');
+  }
+
   nextStep() {
     if (this.currentStep === 3) {
       const videoSystems = this.systems.filter((system) => system.includeVideo);
@@ -677,12 +728,14 @@ class UploadWizard {
     try {
       const createdTests = [];
       for (const benchmark of benchmarkDefinitions) {
+        const customName = this.buildBenchmarkTitle(benchmark);
+        const footnote = this.buildBenchmarkFootnote(benchmark);
         const created = await api.createTest({
           category: benchmark.category,
-          system_under_test: benchmark.systems.map((system) => systemManager.formatSystemName(system)).join(' + '),
+          system_under_test: footnote,
           systems: benchmark.systems.map((system) => ({ type: system.type, name: system.name, variant: system.variant })),
           track_id: trackId,
-          custom_name: `${testName} — ${benchmark.suffix}`,
+          custom_name: customName,
           pilot_lat: parseFloat(document.getElementById('pilot-lat').value) || null,
           pilot_lon: parseFloat(document.getElementById('pilot-lon').value) || null,
           pilot_bearing_deg: parseInt(document.getElementById('pilot-bearing').value, 10) || null,

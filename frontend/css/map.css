@@ -570,7 +570,11 @@
 .map-container {
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 140, 66, 0.06), transparent 34%),
-    #14181f;
+    #10141b;
+}
+
+#map .leaflet-tile {
+  filter: brightness(0.72) saturate(0.82) contrast(1.05);
 }
 
 .sidebar {
