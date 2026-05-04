@@ -11,12 +11,6 @@ class UploadWizard {
   }
 
   async init() {
-    // Check auth
-    if (!api.token) {
-      window.location.href = '/'; // Redirect to viewer
-      return;
-    }
-
     // Attach all event listeners FIRST (synchronously, before any async operations)
     this.attachEventListeners();
 
@@ -149,6 +143,7 @@ class UploadWizard {
 
     const trackPoints = this.getTrackPoints();
     const firstTrackPoint = trackPoints[0];
+    const lastTrackPoint = trackPoints[trackPoints.length - 1];
 
     if (this.uploadedTestData.test_name) {
       document.getElementById('test-name').value = this.uploadedTestData.test_name;
@@ -167,6 +162,87 @@ class UploadWizard {
     if (Number.isFinite(pilotBearing) && !document.getElementById('pilot-bearing').value) {
       document.getElementById('pilot-bearing').value = String(pilotBearing);
     }
+
+    if (!document.getElementById('notes').value) {
+      const notes = [
+        ...(Array.isArray(this.uploadedTestData.warnings) ? this.uploadedTestData.warnings : []),
+        ...(Array.isArray(this.uploadedTestData.issues) ? this.uploadedTestData.issues : []),
+      ].filter(Boolean);
+      if (notes.length > 0) {
+        document.getElementById('notes').value = notes.join('\n');
+      }
+    }
+
+    if (this.uploadedTestData.drone_type) {
+      document.getElementById('profile').value = '';
+      document.getElementById('new-profile').classList.remove('hidden');
+      if (!document.getElementById('profile-name').value) {
+        document.getElementById('profile-name').value = this.uploadedTestData.drone_type;
+      }
+      if (!document.getElementById('profile-frame').value) {
+        document.getElementById('profile-frame').value = this.uploadedTestData.drone_type;
+      }
+    }
+
+    if (!document.getElementById('profile-vtx').value && this.uploadedTestData.video_air_unit_model) {
+      document.getElementById('profile-vtx').value = this.uploadedTestData.video_air_unit_model;
+    }
+
+    if (!document.getElementById('profile-weight').value && this.uploadedTestData.battery) {
+      document.getElementById('profile-weight').value = this.uploadedTestData.battery;
+    }
+
+    if (!document.getElementById('track').value) {
+      document.getElementById('track').value = '__new__';
+      document.getElementById('new-track').classList.remove('hidden');
+      if (!document.getElementById('track-name').value) {
+        document.getElementById('track-name').value = this.uploadedTestData.test_name || 'Uploaded Track';
+      }
+      if (!document.getElementById('track-location').value) {
+        document.getElementById('track-location').value = this.uploadedTestData.location_name || 'Imported from uploaded JSON';
+      }
+    }
+
+    if (lastTrackPoint && !document.getElementById('pilot-lat').value) {
+      document.getElementById('pilot-lat').value = lastTrackPoint.lat.toFixed(5);
+      document.getElementById('pilot-lon').value = lastTrackPoint.lon.toFixed(5);
+    }
+
+    this.populateSystemsFromUpload();
+  }
+
+  populateSystemsFromUpload() {
+    if (this.systems.length > 0 || !this.uploadedTestData) return;
+
+    const systems = [];
+    if (this.uploadedTestData.video_ground_unit) {
+      systems.push({
+        id: `auto_vrx_${Date.now()}`,
+        type: 'VRX',
+        name: this.uploadedTestData.video_ground_unit,
+        variant: null,
+      });
+    }
+    if (this.uploadedTestData.video_air_unit_model) {
+      systems.push({
+        id: `auto_vtx_${Date.now()}`,
+        type: 'VTX',
+        name: this.uploadedTestData.video_air_unit_model,
+        variant: null,
+      });
+    }
+    if (this.uploadedTestData.control_rx_model) {
+      systems.push({
+        id: `auto_ctrl_${Date.now()}`,
+        type: 'CONTROL_LINK',
+        name: this.uploadedTestData.control_rx_model,
+        variant: this.uploadedTestData.control_rx_type?.toLowerCase() || null,
+      });
+    }
+
+    this.systems = systems;
+    this.renderSystems();
+    this.updateTestName();
   }
 
   renderNormalizedPreview() {
@@ -385,8 +461,6 @@ class UploadWizard {
   }
 
   renderPreview() {
-<<<<<<< HEAD
-    // Initialize Leaflet map in step 4
     const mapContainer = document.getElementById('map-preview');
     if (this.previewMap) this.previewMap.remove();
 
@@ -396,162 +470,39 @@ class UploadWizard {
       maxZoom: 19,
     }).addTo(this.previewMap);
 
-    // Draw path (cyan polyline)
-    if (this.pathData && this.pathData.features) {
-      this.pathData.features.forEach(feature => {
-        if (feature.geometry.type === 'LineString') {
-          L.polyline(
-            feature.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
-            { color: 'cyan', weight: 3, opacity: 0.8 }
-          ).addTo(this.previewMap);
-        }
-      });
+    const trackPoints = this.getTrackPoints();
+    if (trackPoints.length > 0) {
+      const latLngs = trackPoints.map(point => [point.lat, point.lon]);
+      L.polyline(latLngs, { color: 'cyan', weight: 3, opacity: 0.8 }).addTo(this.previewMap);
+      this.previewMap.fitBounds(latLngs, { padding: [40, 40] });
     }
 
-    // Draw heatmap as circles (intensity represented by color/radius)
-    if (this.heatmapData && this.heatmapData.features) {
-      this.heatmapData.features.forEach(feature => {
-        if (feature.geometry.type === 'Point') {
-          const [lon, lat] = feature.geometry.coordinates;
-          const value = feature.properties?.value || 0;
-
-          // Scale: higher values → orange-red, lower values → dim
-          let color = '#00ff00';
-          let radius = 4;
-
-          if (value > 0.75) {
-            color = '#ff0000'; // Red for high
-            radius = 6;
-          } else if (value > 0.5) {
-            color = '#ff8800'; // Orange for medium-high
-            radius = 5;
-          } else if (value > 0.25) {
-            color = '#ffff00'; // Yellow for medium
-            radius = 4;
-          }
-
-          L.circleMarker([lat, lon], {
-            radius: radius,
-            color: color,
-            weight: 1,
-            opacity: 0.7,
-            fillOpacity: 0.6,
-          }).addTo(this.previewMap);
-        }
-      });
-    }
-
-    // Fit bounds to show all data
-    if (this.pathData && this.pathData.features && this.pathData.features.length > 0) {
-      const bounds = L.latLngBounds();
-      this.pathData.features.forEach(feature => {
-        if (feature.geometry.type === 'LineString') {
-          feature.geometry.coordinates.forEach(([lon, lat]) => {
-            bounds.extend([lat, lon]);
-          });
-        }
-      });
-      if (bounds.isValid()) {
-        this.previewMap.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-
-    // Display summary statistics
-    const infoPanel = document.getElementById('preview-info');
-    const heatmapCount = this.heatmapData?.features?.length || 0;
-    const pathCount = this.pathData?.features?.length || 0;
-    const pathDistance = this.calculatePathDistance();
-    const systemStr = this.systems.map(s => systemManager.formatSystemName(s)).join(', ');
-    const trackSelect = document.getElementById('track');
-    const trackName = trackSelect.selectedOptions[0]?.textContent || 'Unknown';
-    const testName = document.getElementById('test-name').value || 'Unnamed test';
-
-    infoPanel.innerHTML = `
-      <h3>Test Summary</h3>
-      <table>
-        <tr>
-          <td><strong>Test Name:</strong></td>
-          <td>${escapeHtml(testName)}</td>
-        </tr>
-        <tr>
-          <td><strong>Track:</strong></td>
-          <td>${escapeHtml(trackName)}</td>
-        </tr>
-        <tr>
-          <td><strong>Systems:</strong></td>
-          <td>${escapeHtml(systemStr || 'None selected')}</td>
-        </tr>
-        <tr>
-          <td><strong>Heatmap Cells:</strong></td>
-          <td>${heatmapCount}</td>
-        </tr>
-        <tr>
-          <td><strong>Path Points:</strong></td>
-          <td>${pathCount}</td>
-        </tr>
-        <tr>
-          <td><strong>Approximate Distance:</strong></td>
-          <td>${pathDistance}</td>
-        </tr>
-        <tr>
-          <td><strong>Pilot Position:</strong></td>
-          <td>${document.getElementById('pilot-lat').value}, ${document.getElementById('pilot-lon').value}</td>
-        </tr>
-        <tr>
-          <td><strong>Grid Size:</strong></td>
-          <td>${document.getElementById('grid-size').value}m</td>
-        </tr>
-      </table>
-    `;
-  }
-
-  calculatePathDistance() {
-    if (!this.pathData || !this.pathData.features) return '0 km';
-
-    let totalDistance = 0;
-    this.pathData.features.forEach(feature => {
-      if (feature.geometry.type === 'LineString') {
-        const coords = feature.geometry.coordinates;
-        for (let i = 0; i < coords.length - 1; i++) {
-          const [lon1, lat1] = coords[i];
-          const [lon2, lat2] = coords[i + 1];
-          const distance = this.haversineM(lat1, lon1, lat2, lon2);
-          totalDistance += distance;
-        }
-      }
-    });
-
-    return (totalDistance / 1000).toFixed(2) + ' km';
-  }
-
-  // Haversine distance calculation (same as in utils.ts)
-  haversineM(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-    const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-=======
     const panel = document.getElementById('preview-info');
     if (!this.uploadedTestData) {
       panel.innerHTML = '<p>No uploaded test data available.</p>';
       return;
     }
 
+    const systemStr = this.systems.map(s => systemManager.formatSystemName(s)).join(', ');
+    const trackSelect = document.getElementById('track');
+    const selectedTrack = trackSelect.selectedOptions[0]?.textContent || '';
+    const customTrackName = document.getElementById('track-name').value.trim();
+    const trackName = customTrackName || (selectedTrack && selectedTrack !== '+ Create new track' ? selectedTrack : 'Not selected');
+
     panel.innerHTML = `
-      <h3>${this.uploadedTestData.test_name || 'Untitled Test'}</h3>
+      <h3>${this.uploadedTestData.test_name || document.getElementById('test-name').value || 'Untitled Test'}</h3>
       <dl>
+        <dt>Track</dt><dd>${trackName}</dd>
+        <dt>Systems</dt><dd>${systemStr || 'Not specified'}</dd>
         <dt>Captured At</dt><dd>${this.uploadedTestData.captured_at || 'Unknown'}</dd>
         <dt>Track Samples</dt><dd>${this.uploadedTestData.track.length}</dd>
         <dt>GPS Samples</dt><dd>${this.uploadedTestData.stats?.gps_samples ?? this.getTrackPoints().length}</dd>
         <dt>Flight Duration</dt><dd>${this.uploadedTestData.stats?.flight_duration_s ?? 0}s</dd>
         <dt>Min Bitrate</dt><dd>${this.uploadedTestData.stats?.min_bitrate_mbps ?? 0}</dd>
         <dt>Max Bitrate</dt><dd>${this.uploadedTestData.stats?.max_bitrate_mbps ?? 0}</dd>
+        <dt>Pilot Position</dt><dd>${document.getElementById('pilot-lat').value || 'Unknown'}, ${document.getElementById('pilot-lon').value || 'Unknown'}</dd>
       </dl>
     `;
->>>>>>> fd76a07 (Simplify repo to website-only JSON upload flow)
   }
 
   async publishDraft() {
@@ -563,6 +514,12 @@ class UploadWizard {
   }
 
   async doPublish(status) {
+    const authToken = api.token || localStorage.getItem('auth_token') || (typeof auth !== 'undefined' ? auth.getToken() : null);
+    if (!authToken) {
+      alert('Please log in before saving or publishing a test.');
+      return;
+    }
+
     // Validate systems
     if (!Array.isArray(this.systems) || this.systems.length === 0) {
       alert('Please add at least one system under test');

@@ -73,10 +73,6 @@ class AuthManager {
         if (typeof api !== 'undefined') api.setToken(this.token);
         this.syncUserToBackend();
         this.updateUI();
-
-        if (window.location.pathname === '/upload.html' || window.location.pathname === '/profile.html') {
-          window.location.href = '/';
-        }
       } else {
         this.user = null;
         this.token = null;
