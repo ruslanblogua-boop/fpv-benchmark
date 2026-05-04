@@ -39,23 +39,19 @@
         <div class="control-panel upload-trim-panel">
           <div id="trim-map-preview" class="map-container trim-map-preview"></div>
 
-          <div class="trim-range-group">
-            <label>
-              Trim Start
-              <input type="range" id="trim-start-range" min="0" max="0" step="1" value="0">
-              <input type="number" id="trim-start" min="0" step="1" value="0">
-            </label>
-
-            <label>
-              Trim End
-              <input type="range" id="trim-end-range" min="0" max="0" step="1" value="0">
-              <input type="number" id="trim-end" min="0" step="1" value="0">
-            </label>
-          </div>
-
           <label>
             Timeline Preview
             <div id="trim-timeline" class="trim-timeline"></div>
+            <div class="trim-slider-row">
+              <div class="trim-slider">
+                <span>Trim Start</span>
+                <input type="range" id="trim-start-range" min="0" max="0" step="1" value="0">
+              </div>
+              <div class="trim-slider">
+                <span>Trim End</span>
+                <input type="range" id="trim-end-range" min="0" max="0" step="1" value="0">
+              </div>
+            </div>
           </label>
 
           <p class="hint" id="trim-summary">Trim away takeoff or landing samples before publishing.</p>

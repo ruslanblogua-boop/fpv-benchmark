@@ -33,13 +33,13 @@ class UploadWizard {
       console.error('Failed to load profiles:', err);
     }
 
-    this.systems = systemManager.getAllSystems();
+    this.systems = [];
     this.renderSystems();
   }
 
   attachEventListeners() {
     document.getElementById('file-test-json').addEventListener('change', (e) => this.onTestJsonSelect(e));
-    ['trim-start', 'trim-end', 'trim-start-range', 'trim-end-range'].forEach((id) => {
+    ['trim-start-range', 'trim-end-range'].forEach((id) => {
       document.getElementById(id).addEventListener('input', (event) => this.onTrimInput(event.target.id, event.target.value));
     });
     document.getElementById('step-1-next').addEventListener('click', () => this.nextStep());
@@ -80,6 +80,7 @@ class UploadWizard {
         const parsed = JSON.parse(evt.target.result);
         this.validateTestJson(parsed);
         this.uploadedTestData = parsed;
+        this.systems = [];
         this.trimStart = 0;
         this.trimEnd = Math.max((this.uploadedTestData.track?.length || 1) - 1, 0);
         this.syncTrimInputs();
@@ -102,16 +103,14 @@ class UploadWizard {
 
   syncTrimInputs() {
     const rawLength = this.getRawTrack().length;
-    ['trim-start', 'trim-start-range'].forEach((id) => {
-      const input = document.getElementById(id);
-      input.max = String(Math.max(rawLength - 1, 0));
-      input.value = String(this.trimStart);
-    });
-    ['trim-end', 'trim-end-range'].forEach((id) => {
-      const input = document.getElementById(id);
-      input.max = String(Math.max(rawLength - 1, 0));
-      input.value = String(this.trimEnd);
-    });
+    const startInput = document.getElementById('trim-start-range');
+    const endInput = document.getElementById('trim-end-range');
+    const maxValue = String(Math.max(rawLength - 1, 0));
+
+    startInput.max = maxValue;
+    startInput.value = String(this.trimStart);
+    endInput.max = maxValue;
+    endInput.value = String(this.trimEnd);
   }
 
   onTrimInput(id, value) {
@@ -244,12 +243,13 @@ class UploadWizard {
   }
 
   populateSystemsFromUpload() {
-    if (this.systems.length > 0 || !this.uploadedTestData) return;
+    if (!this.uploadedTestData) return;
 
     const systems = [];
+    const baseId = Date.now();
     if (this.uploadedTestData.video_ground_unit) {
       systems.push({
-        id: `auto_vrx_${Date.now()}`,
+        id: `auto_vrx_${baseId}`,
         type: 'VRX',
         name: this.uploadedTestData.video_ground_unit,
         variant: null,
@@ -259,7 +259,7 @@ class UploadWizard {
     }
     if (this.uploadedTestData.video_air_unit_model) {
       systems.push({
-        id: `auto_vtx_${Date.now() + 1}`,
+        id: `auto_vtx_${baseId + 1}`,
         type: 'VTX',
         name: this.uploadedTestData.video_air_unit_model,
         variant: null,
@@ -269,7 +269,7 @@ class UploadWizard {
     }
     if (this.uploadedTestData.control_rx_model) {
       systems.push({
-        id: `auto_ctrl_rx_${Date.now() + 2}`,
+        id: `auto_ctrl_rx_${baseId + 2}`,
         type: 'CONTROL_LINK',
         name: this.uploadedTestData.control_rx_model,
         variant: this.uploadedTestData.control_rx_type?.toLowerCase() || null,
@@ -277,11 +277,11 @@ class UploadWizard {
         includeControl: true,
       });
     }
-    if (this.uploadedTestData.control_tx_model || this.uploadedTestData.radio_tx_model) {
+    if (this.uploadedTestData.control_tx || this.uploadedTestData.control_tx_model || this.uploadedTestData.radio_tx_model) {
       systems.push({
-        id: `auto_ctrl_tx_${Date.now() + 3}`,
+        id: `auto_ctrl_tx_${baseId + 3}`,
         type: 'RADIO_TX',
-        name: this.uploadedTestData.control_tx_model || this.uploadedTestData.radio_tx_model,
+        name: this.uploadedTestData.control_tx || this.uploadedTestData.control_tx_model || this.uploadedTestData.radio_tx_model,
         variant: null,
         includeVideo: false,
         includeControl: true,
@@ -289,7 +289,7 @@ class UploadWizard {
     }
 
     systems.forEach((system) => systemManager.upsertSystem(system));
-    this.systems = systemManager.getAllSystems().filter((system) => systems.some((item) => item.id === system.id));
+    this.systems = systems.map((system) => ({ ...system }));
     this.renderSystems();
     this.updateTestName();
   }

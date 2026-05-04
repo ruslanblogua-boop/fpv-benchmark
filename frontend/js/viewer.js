@@ -39,9 +39,10 @@ class HeatmapViewer {
 
   async init() {
     this.map = L.map('map').setView([52.18, 21.13], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
       attribution: '© CartoDB',
       maxZoom: 19,
+      opacity: 0.92,
     }).addTo(this.map);
 
     this.attachEventListeners();
@@ -115,7 +116,7 @@ class HeatmapViewer {
   renderSelectedTests() {
     const container = document.getElementById('selected-tests');
     if (this.selectedTests.length === 0) {
-      container.innerHTML = '<div class="empty-state">Choose a test, then add more to switch between them without moving the map.</div>';
+      container.innerHTML = '';
       return;
     }
 
@@ -334,7 +335,7 @@ class HeatmapViewer {
       const [lon, lat] = feature.geometry.coordinates;
       const value = this.pickMetricValue(feature.properties || {}, config.keys);
       if (!Number.isFinite(value)) return;
-      points.push({ lat, lon, value });
+      points.push({ lat, lon, value, properties: feature.properties || {} });
     });
 
     if (points.length === 0) return;
@@ -345,14 +346,14 @@ class HeatmapViewer {
     const bias = this.scaleShift / 100;
 
     this.metricLayer = L.layerGroup(points.map((point) => {
-      const normalized = this.normalizeMetric(point.value, min, max, bias, config.invert);
+      const normalized = this.normalizeMetric(point.value, max, bias, config.invert);
       return L.circleMarker([point.lat, point.lon], {
         radius: 6,
         weight: 0,
         color: 'transparent',
         fillColor: this.colorForValue(normalized),
-        fillOpacity: 0.9,
-      }).bindTooltip(`${config.label}: ${this.formatMetricValue(point.value, config.unit)}`);
+        fillOpacity: 0.92,
+      }).bindPopup(this.buildDataPointPopup(point.properties, config));
     })).addTo(this.map);
 
     this.renderLegend(min, max, config);
@@ -473,12 +474,22 @@ class HeatmapViewer {
     return NaN;
   }
 
-  normalizeMetric(value, min, max, bias, invert = false) {
-    if (max === min) return 0.5;
-    let normalized = (value - min) / (max - min);
-    normalized = Math.min(1, Math.max(0, normalized + bias));
-    if (invert) normalized = 1 - normalized;
-    return normalized;
+  normalizeMetric(value, max, bias, invert = false) {
+    if (!Number.isFinite(max) || max <= 0) return 0.5;
+    const ratio = Math.max(0, Math.min(1, value / max));
+    const redThreshold = Math.max(0.03, Math.min(0.28, 0.12 + bias * 0.16));
+    const greenAnchor = 0.5;
+    let normalized;
+
+    if (ratio <= redThreshold) {
+      normalized = 0;
+    } else if (ratio < greenAnchor) {
+      normalized = 0.5 * ((ratio - redThreshold) / Math.max(greenAnchor - redThreshold, 0.01));
+    } else {
+      normalized = 0.5 + 0.5 * ((ratio - greenAnchor) / Math.max(1 - greenAnchor, 0.01));
+    }
+
+    return invert ? 1 - Math.max(0, Math.min(1, normalized)) : Math.max(0, Math.min(1, normalized));
   }
 
   colorForValue(normalized) {
@@ -487,12 +498,33 @@ class HeatmapViewer {
   }
 
   renderLegend(min, max, config) {
+    const redThreshold = Math.max(0.03, Math.min(0.28, 0.12 + (this.scaleShift / 100) * 0.16));
     document.getElementById('metric-legend').innerHTML = `
       <div class="legend-gradient"></div>
-      <div class="legend-shift">Scale shift: ${this.scaleShift > 0 ? '+' : ''}${this.scaleShift}% · ${config.invert ? 'green = lower value' : 'green = higher value'}</div>
+      <div class="legend-shift">Scale shift: ${this.scaleShift > 0 ? '+' : ''}${this.scaleShift}% · red &lt; ${Math.round(redThreshold * 100)}% of max · green = 50% of max · brighter green &gt; 50%</div>
       <div class="legend-range">
         <span>${this.formatMetricValue(config.invert ? max : min, config.unit)}</span>
         <span>${this.formatMetricValue(config.invert ? min : max, config.unit)}</span>
+      </div>
+    `;
+  }
+
+  buildDataPointPopup(properties = {}, config) {
+    const speedMs = Number.isFinite(Number(properties.speed_ms))
+      ? Number(properties.speed_ms)
+      : (Number.isFinite(Number(properties.ground_speed_kmh)) ? Number(properties.ground_speed_kmh) / 3.6 : Number(properties.speed || properties.avg_speed));
+    return `
+      <div class="data-point-popup">
+        <strong>${config.label}</strong>
+        <div>${this.formatMetricValue(this.pickMetricValue(properties, config.keys), config.unit)}</div>
+        ${Number.isFinite(Number(properties.distance_from_home_m)) ? `<div>Distance from home: ${Math.round(Number(properties.distance_from_home_m))} m</div>` : ''}
+        ${Number.isFinite(Number(properties.altitude || properties.altitude_m || properties.avg_altitude)) ? `<div>Altitude from home: ${Math.round(Number(properties.altitude || properties.altitude_m || properties.avg_altitude))} m</div>` : ''}
+        ${Number.isFinite(speedMs) ? `<div>Speed: ${Math.round(speedMs * 10) / 10} m/s</div>` : ''}
+        ${Number.isFinite(Number(properties.delay_ms)) ? `<div>Delay: ${Math.round(Number(properties.delay_ms))} ms</div>` : ''}
+        ${Number.isFinite(Number(properties.bitrate || properties.avg_bitrate || properties.vtx_bitrate_mbps)) ? `<div>Bitrate: ${Math.round(Number(properties.bitrate || properties.avg_bitrate || properties.vtx_bitrate_mbps) * 10) / 10} Mbps</div>` : ''}
+        ${Number.isFinite(Number(properties.video_signal || properties.avg_video_signal || properties.vtx_link_quality)) ? `<div>Video signal: ${Math.round(Number(properties.video_signal || properties.avg_video_signal || properties.vtx_link_quality))}</div>` : ''}
+        ${Number.isFinite(Number(properties.rc_snr || properties.avg_rc_snr || properties.rqly_percent || properties.rx_link_quality)) ? `<div>Control quality: ${Math.round(Number(properties.rc_snr || properties.avg_rc_snr || properties.rqly_percent || properties.rx_link_quality) * 10) / 10}%</div>` : ''}
+        ${Number.isFinite(Number(properties.t)) ? `<div>Timestamp: ${(Number(properties.t) / 1000).toFixed(1)} s</div>` : ''}
       </div>
     `;
   }

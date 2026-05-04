@@ -259,7 +259,8 @@
 
 /* Upload container */
 .upload-container {
-  max-width: 900px;
+  width: min(1480px, calc(100vw - 40px));
+  max-width: none;
   margin: 0 auto;
 }
 
@@ -568,8 +569,8 @@
 
 .map-container {
   background:
-    radial-gradient(circle at 20% 20%, rgba(255, 140, 66, 0.08), transparent 30%),
-    #0a0d12;
+    radial-gradient(circle at 20% 20%, rgba(255, 140, 66, 0.06), transparent 34%),
+    #14181f;
 }
 
 .sidebar {
