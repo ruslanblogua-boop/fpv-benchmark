@@ -574,7 +574,7 @@
 }
 
 #map .leaflet-tile {
-  filter: brightness(0.92) saturate(1.18) contrast(1.06);
+  filter: saturate(1.08) contrast(1.02);
 }
 
 .sidebar {
@@ -655,6 +655,7 @@
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 44px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  z-index: 600;
 }
 
 #test-info h3 {

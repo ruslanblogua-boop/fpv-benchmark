@@ -39,10 +39,10 @@ class HeatmapViewer {
 
   async init() {
     this.map = L.map('map').setView([52.18, 21.13], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© CartoDB',
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '© Stadia Maps © OpenMapTiles © OpenStreetMap',
       maxZoom: 19,
-      opacity: 0.96,
+      opacity: 1,
     }).addTo(this.map);
 
     this.attachEventListeners();

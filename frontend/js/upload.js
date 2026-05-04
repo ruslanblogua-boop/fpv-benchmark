@@ -360,14 +360,16 @@ class UploadWizard {
     if (!container) return;
     if (this.trimPreviewMap) {
       this.updateTrimPreviewMap();
+      setTimeout(() => this.trimPreviewMap?.invalidateSize(), 0);
       return;
     }
 
     this.trimPreviewMap = L.map(container, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, tap: false });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '© Stadia Maps © OpenMapTiles © OpenStreetMap',
       maxZoom: 19,
     }).addTo(this.trimPreviewMap);
+    setTimeout(() => this.trimPreviewMap?.invalidateSize(), 0);
     this.updateTrimPreviewMap();
   }
 

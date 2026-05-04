@@ -1191,17 +1191,26 @@ textarea:focus {
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+  padding: 1.35rem;
 }
 
 .trim-map-preview {
   width: 100%;
-  height: 420px;
+  min-height: 520px;
+  height: 52vh;
   margin-bottom: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .upload-trim-panel label {
   width: 100%;
   margin-bottom: 0;
+}
+
+#step-1.step-content {
+  width: 100%;
+  max-width: none;
 }
 
 .upload-trim-panel .hint {
