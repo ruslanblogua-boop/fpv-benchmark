@@ -34,6 +34,7 @@ class HeatmapViewer {
     this.selectedTests = [];
     this.testBundles = new Map();
     this.allTests = [];
+    this.searchIndex = [];
     this.init();
   }
 
@@ -61,6 +62,8 @@ class HeatmapViewer {
     } catch (err) {
       console.error('Failed to load tests:', err);
     }
+
+    this.loadSearchIndex().catch((err) => console.error('Failed to build search index:', err));
   }
 
   attachEventListeners() {
@@ -76,6 +79,15 @@ class HeatmapViewer {
       this.updateMetricLayer();
     });
     document.getElementById('add-test-toggle').addEventListener('click', () => this.toggleAddMode());
+    document.getElementById('topbar-test-search')?.addEventListener('input', (event) => this.renderTopbarSearch(event.target.value));
+    document.getElementById('topbar-test-search')?.addEventListener('focus', (event) => this.renderTopbarSearch(event.target.value));
+    document.addEventListener('click', (event) => {
+      const results = document.getElementById('topbar-search-results');
+      const search = document.querySelector('.topbar-search');
+      if (results && search && !search.contains(event.target)) {
+        results.classList.add('hidden');
+      }
+    });
   }
 
   getActiveCategory() {
@@ -154,6 +166,110 @@ class HeatmapViewer {
     const browser = document.querySelector('.test-browser');
     if (!browser) return;
     browser.classList.toggle('collapsed', collapsed);
+  }
+
+  async loadSearchIndex() {
+    const [testRes, cameraRes] = await Promise.allSettled([
+      api.getTests({}),
+      api.getCameraTests({}),
+    ]);
+
+    const linkItems = testRes.status === 'fulfilled'
+      ? (testRes.value.tests || []).map((test) => ({
+        id: test.id,
+        type: 'link',
+        label: test.custom_name || test.auto_name || 'Untitled Test',
+        meta: test.system_under_test || test.track_name || 'Link benchmark',
+        raw: test,
+      }))
+      : [];
+
+    const cameraItems = cameraRes.status === 'fulfilled'
+      ? (cameraRes.value.camera_tests || []).map((item) => ({
+        id: item.id,
+        type: 'camera',
+        label: item.combo_name || item.camera_name || 'Camera combo',
+        meta: item.summary || item.scene_name || 'Camera benchmark',
+        raw: item,
+      }))
+      : [];
+
+    this.searchIndex = [
+      ...linkItems,
+      ...cameraItems,
+      {
+        id: 'battery-placeholder',
+        type: 'battery',
+        label: 'Battery benchmarks',
+        meta: 'Under construction',
+        raw: null,
+      },
+    ];
+  }
+
+  renderTopbarSearch(query = '') {
+    const results = document.getElementById('topbar-search-results');
+    if (!results) return;
+
+    const term = query.toLowerCase().trim();
+    if (!term) {
+      results.classList.add('hidden');
+      results.innerHTML = '';
+      return;
+    }
+
+    const matches = this.searchIndex
+      .filter((item) => `${item.label} ${item.meta}`.toLowerCase().includes(term))
+      .slice(0, 6);
+
+    if (matches.length === 0) {
+      results.innerHTML = '<div class="topbar-search-empty">No tests match that search yet.</div>';
+      results.classList.remove('hidden');
+      return;
+    }
+
+    results.innerHTML = matches.map((item) => `
+      <button class="topbar-search-item" data-search-id="${item.id}" data-search-type="${item.type}">
+        <span class="topbar-search-copy">
+          <strong>${item.label}</strong>
+          <small>${item.meta}</small>
+        </span>
+        <span class="topbar-search-tag ${item.type}">${this.formatSearchTag(item.type)}</span>
+      </button>
+    `).join('');
+    results.classList.remove('hidden');
+
+    results.querySelectorAll('[data-search-id]').forEach((button) => {
+      button.addEventListener('click', () => this.handleTopbarSearchSelect(button.dataset.searchId, button.dataset.searchType));
+    });
+  }
+
+  formatSearchTag(type) {
+    if (type === 'camera') return 'Camera';
+    if (type === 'battery') return 'Battery';
+    return 'Link';
+  }
+
+  async handleTopbarSearchSelect(id, type) {
+    const results = document.getElementById('topbar-search-results');
+    const search = document.getElementById('topbar-test-search');
+    if (results) results.classList.add('hidden');
+    if (search) search.value = '';
+
+    if (type === 'camera') {
+      window.location.href = `/camera.html?camera_test=${encodeURIComponent(id)}`;
+      return;
+    }
+
+    if (type === 'battery') {
+      window.location.href = '/battery.html';
+      return;
+    }
+
+    this.addMode = false;
+    document.getElementById('add-test-toggle').classList.remove('active');
+    document.getElementById('add-test-toggle').textContent = 'Add Test';
+    await this.addSelectedTest(id, this.selectedTests.length > 0);
   }
 
   renderTestList(tests) {

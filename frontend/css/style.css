@@ -44,6 +44,92 @@
   flex: 1;
 }
 
+.topbar-search {
+  position: relative;
+  flex: 0 1 420px;
+}
+
+.topbar-search input {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 999px;
+  padding-inline: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #2a303b;
+}
+
+.topbar-search-results {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 18px;
+  background: rgba(13, 17, 24, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.42);
+  z-index: 1200;
+}
+
+.topbar-search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2a303b;
+}
+
+.topbar-search-item:hover {
+  background: rgba(255, 140, 66, 0.1);
+}
+
+.topbar-search-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.topbar-search-copy strong {
+  color: var(--fg-lighter);
+}
+
+.topbar-search-copy small {
+  color: var(--fg-muted);
+}
+
+.topbar-search-tag {
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.topbar-search-tag.link {
+  background: rgba(255, 140, 66, 0.16);
+  color: #ffd6bf;
+}
+
+.topbar-search-tag.camera {
+  background: rgba(103, 232, 249, 0.12);
+  color: #c4f7ff;
+}
+
+.topbar-search-tag.battery {
+  background: rgba(163, 230, 53, 0.14);
+  color: #ebffbc;
+}
+
+.topbar-search-empty {
+  padding: 0.8rem 0.9rem;
+  color: var(--fg-muted);
+}
+
 .topbar-link {
   padding: 0.5rem 1rem;
   color: var(--fg-light);
@@ -115,6 +201,11 @@
     margin-top: 0.5rem;
   }
 
+  .topbar-search {
+    order: 2;
+    flex: 1 1 100%;
+  }
+
   .topbar-link {
     padding: 0.5rem 0.75rem;
     font-size: 13px;
@@ -146,6 +237,10 @@
 
   .topbar-categories {
     display: none;
+  }
+
+  .topbar-search {
+    flex-basis: 100%;
   }
 
   .topbar-link {
@@ -1203,6 +1298,20 @@ textarea:focus {
   overflow: hidden;
 }
 
+.trim-pilot-panel {
+  margin-top: 1rem;
+}
+
+.pilot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pilot-grid-span {
+  grid-column: 1 / -1;
+}
+
 .upload-trim-panel label {
   width: 100%;
   margin-bottom: 0;
@@ -1429,6 +1538,7 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
+  .pilot-grid,
   .systems-layout {
     grid-template-columns: 1fr;
   }

@@ -129,6 +129,17 @@ class CameraPage {
       console.error('Failed to load camera tests:', err);
       this.cameraTests = CAMERA_FIXTURES;
     }
+
+    const requestedId = new URLSearchParams(window.location.search).get('camera_test');
+    if (requestedId) {
+      const matched = this.cameraTests.find((item) => item.id === requestedId);
+      if (matched) {
+        this.activeTab = matched.tab;
+        document.querySelectorAll('.camera-tab').forEach((button) => {
+          button.classList.toggle('active', button.dataset.tab === this.activeTab);
+        });
+      }
+    }
   }
 
   renderList() {
@@ -161,6 +172,14 @@ class CameraPage {
 
     if (!this.selectedItem || this.selectedItem.tab !== this.activeTab || !this.filteredItems.some((item) => item.id === this.selectedItem.id)) {
       this.selectedItem = this.filteredItems[0];
+    }
+
+    const requestedId = new URLSearchParams(window.location.search).get('camera_test');
+    if (requestedId) {
+      const matched = this.filteredItems.find((item) => item.id === requestedId);
+      if (matched) {
+        this.selectedItem = matched;
+      }
     }
 
     list.innerHTML = '';

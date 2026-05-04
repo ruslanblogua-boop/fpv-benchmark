@@ -20,6 +20,11 @@
       <a href="/battery.html" class="topbar-link">Battery</a>
     </div>
 
+    <div class="topbar-search">
+      <input id="topbar-test-search" type="search" placeholder="Search tests, systems, camera combos...">
+      <div id="topbar-search-results" class="topbar-search-results hidden"></div>
+    </div>
+
     <div class="topbar-actions">
       <a href="/upload.html" class="topbar-link topbar-upload">+ New Test</a>
       <button id="topbar-login" class="topbar-link">Login</button>
@@ -37,7 +42,7 @@
         <button id="add-test-toggle" class="btn">Add Test</button>
       </div>
 
-      <div class="panel test-browser">
+      <div class="panel test-browser collapsed">
         <h2>Tests</h2>
 
         <div class="filters">

@@ -10,7 +10,6 @@ class UploadWizard {
     this.trimPreviewBaseLayer = null;
     this.trimPreviewKeptLayer = null;
     this.map = null;
-    this.previewMap = null;
     this.pilotMarker = null;
     this.systems = [];
     this.init();
@@ -45,13 +44,11 @@ class UploadWizard {
     document.getElementById('step-1-next').addEventListener('click', () => this.nextStep());
 
     document.getElementById('step-2-back').addEventListener('click', () => this.prevStep());
-    document.getElementById('step-2-next').addEventListener('click', () => this.nextStep());
-
-    document.getElementById('step-3-back').addEventListener('click', () => this.prevStep());
-    document.getElementById('step-3-next').addEventListener('click', () => this.nextStep());
     document.getElementById('profile').addEventListener('change', (e) => this.onProfileChange(e));
     document.getElementById('track').addEventListener('change', (e) => this.onTrackChange(e));
     document.getElementById('system-search').addEventListener('input', () => this.renderExistingSystems());
+    document.getElementById('pilot-lat').addEventListener('input', () => this.syncPilotMarkerFromInputs());
+    document.getElementById('pilot-lon').addEventListener('input', () => this.syncPilotMarkerFromInputs());
 
     const addSystemBtn = document.getElementById('add-system-btn');
     if (addSystemBtn) addSystemBtn.addEventListener('click', () => this.openSystemModal());
@@ -65,7 +62,6 @@ class UploadWizard {
     const systemModalCancel = document.getElementById('system-modal-cancel');
     if (systemModalCancel) systemModalCancel.addEventListener('click', () => this.closeSystemModal());
 
-    document.getElementById('step-4-back').addEventListener('click', () => this.prevStep());
     document.getElementById('publish-draft').addEventListener('click', () => this.publishDraft());
     document.getElementById('publish-live').addEventListener('click', () => this.publishLive());
   }
@@ -81,8 +77,9 @@ class UploadWizard {
         this.validateTestJson(parsed);
         this.uploadedTestData = parsed;
         this.systems = [];
-        this.trimStart = 0;
-        this.trimEnd = Math.max((this.uploadedTestData.track?.length || 1) - 1, 0);
+        const { start, end } = this.getInitialTrimRange();
+        this.trimStart = start;
+        this.trimEnd = end;
         this.syncTrimInputs();
         document.getElementById('test-json-preview').textContent = `✓ ${file.name} (${this.uploadedTestData.track?.length || 0} samples)`;
         this.checkFilesReady();
@@ -99,6 +96,18 @@ class UploadWizard {
     if (!data || typeof data !== 'object') throw new Error('JSON root must be an object');
     if (!Array.isArray(data.track)) throw new Error('JSON must contain a track array');
     if (data.track.length === 0) throw new Error('Track array cannot be empty');
+  }
+
+  getInitialTrimRange() {
+    const rawTrack = this.getRawTrack();
+    const firstValidIndex = rawTrack.findIndex((point) => this.isValidCoordinate(point));
+    const lastValidIndex = rawTrack.length - 1 - [...rawTrack].reverse().findIndex((point) => this.isValidCoordinate(point));
+
+    if (firstValidIndex === -1 || lastValidIndex === -1) {
+      return { start: 0, end: Math.max(rawTrack.length - 1, 0) };
+    }
+
+    return { start: firstValidIndex, end: Math.max(firstValidIndex, lastValidIndex) };
   }
 
   syncTrimInputs() {
@@ -364,11 +373,16 @@ class UploadWizard {
       return;
     }
 
-    this.trimPreviewMap = L.map(container, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, tap: false });
+    this.trimPreviewMap = L.map(container, { zoomControl: false, attributionControl: false });
     L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
       attribution: '© Stadia Maps © OpenMapTiles © OpenStreetMap',
       maxZoom: 19,
     }).addTo(this.trimPreviewMap);
+    this.trimPreviewMap.on('click', (e) => {
+      document.getElementById('pilot-lat').value = e.latlng.lat.toFixed(5);
+      document.getElementById('pilot-lon').value = e.latlng.lng.toFixed(5);
+      this.syncPilotMarkerFromInputs();
+    });
     setTimeout(() => this.trimPreviewMap?.invalidateSize(), 0);
     this.updateTrimPreviewMap();
   }
@@ -400,6 +414,27 @@ class UploadWizard {
     if (allPoints.length > 0) {
       this.trimPreviewMap.fitBounds(L.latLngBounds(allPoints), { padding: [16, 16] });
     }
+
+    this.syncPilotMarkerFromInputs();
+  }
+
+  syncPilotMarkerFromInputs() {
+    if (!this.trimPreviewMap) return;
+    const lat = parseFloat(document.getElementById('pilot-lat').value);
+    const lon = parseFloat(document.getElementById('pilot-lon').value);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    if (!this.pilotMarker) {
+      this.pilotMarker = L.marker([lat, lon], { draggable: true }).addTo(this.trimPreviewMap);
+      this.pilotMarker.on('dragend', () => {
+        const { lat: markerLat, lng: markerLon } = this.pilotMarker.getLatLng();
+        document.getElementById('pilot-lat').value = markerLat.toFixed(5);
+        document.getElementById('pilot-lon').value = markerLon.toFixed(5);
+      });
+      return;
+    }
+
+    this.pilotMarker.setLatLng([lat, lon]);
   }
 
   populateTrackSelect(tracks) {
@@ -627,7 +662,7 @@ class UploadWizard {
   }
 
   nextStep() {
-    if (this.currentStep === 3) {
+    if (this.currentStep === 2) {
       const videoSystems = this.systems.filter((system) => system.includeVideo);
       const controlSystems = this.systems.filter((system) => system.includeControl);
       if (videoSystems.length === 0 || controlSystems.length === 0) {
@@ -638,8 +673,6 @@ class UploadWizard {
 
     this.currentStep += 1;
     this.renderStep();
-    if (this.currentStep === 2) this.setupMapStep();
-    if (this.currentStep === 4) this.renderPreview();
   }
 
   prevStep() {
@@ -652,63 +685,6 @@ class UploadWizard {
     document.getElementById(`step-${this.currentStep}`).classList.add('active');
     document.querySelectorAll('.step').forEach((el) => el.classList.remove('active'));
     document.querySelector(`[data-step="${this.currentStep}"]`).classList.add('active');
-  }
-
-  setupMapStep() {
-    if (this.map) this.map.remove();
-    this.map = L.map('map-setup').setView([52.18, 21.13], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19,
-    }).addTo(this.map);
-
-    const latLngs = this.getTrackPoints().map((point) => [point.lat, point.lon]);
-    if (latLngs.length > 0) {
-      L.polyline(latLngs, { color: '#ff8c42', weight: 3, opacity: 0.9 }).addTo(this.map);
-      this.map.fitBounds(latLngs, { padding: [30, 30] });
-    }
-
-    const pilotLat = parseFloat(document.getElementById('pilot-lat').value) || latLngs[0]?.[0] || 52.18;
-    const pilotLon = parseFloat(document.getElementById('pilot-lon').value) || latLngs[0]?.[1] || 21.13;
-    this.pilotMarker = L.marker([pilotLat, pilotLon], { draggable: true }).addTo(this.map);
-    this.pilotMarker.on('dragend', () => {
-      const { lat, lng } = this.pilotMarker.getLatLng();
-      document.getElementById('pilot-lat').value = lat.toFixed(5);
-      document.getElementById('pilot-lon').value = lng.toFixed(5);
-    });
-    this.map.on('click', (e) => {
-      this.pilotMarker.setLatLng(e.latlng);
-      document.getElementById('pilot-lat').value = e.latlng.lat.toFixed(5);
-      document.getElementById('pilot-lon').value = e.latlng.lng.toFixed(5);
-    });
-  }
-
-  renderPreview() {
-    if (this.previewMap) this.previewMap.remove();
-    this.previewMap = L.map('map-preview').setView([52.18, 21.13], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19,
-    }).addTo(this.previewMap);
-
-    const latLngs = this.getTrackPoints().map((point) => [point.lat, point.lon]);
-    if (latLngs.length > 0) {
-      L.polyline(latLngs, { color: '#ff8c42', weight: 3, opacity: 0.9 }).addTo(this.previewMap);
-      this.previewMap.fitBounds(latLngs, { padding: [40, 40] });
-    }
-
-    const panel = document.getElementById('preview-info');
-    panel.innerHTML = `
-      <h3>${this.uploadedTestData?.test_name || document.getElementById('test-name').value || 'Untitled Test'}</h3>
-      <dl>
-        <dt>Benchmarks</dt><dd>Video + Control</dd>
-        <dt>Video Systems</dt><dd>${this.systems.filter((system) => system.includeVideo).map((system) => systemManager.formatSystemName(system)).join(', ') || 'None selected'}</dd>
-        <dt>Control Systems</dt><dd>${this.systems.filter((system) => system.includeControl).map((system) => systemManager.formatSystemName(system)).join(', ') || 'None selected'}</dd>
-        <dt>Trimmed Samples</dt><dd>${this.getTrimmedTrack().length}</dd>
-        <dt>Valid GPS Samples</dt><dd>${this.getTrackPoints().length}</dd>
-        <dt>Flagged Teleports</dt><dd>${this.detectTeleports().length}</dd>
-      </dl>
-    `;
   }
 
   async publishDraft() {
@@ -725,6 +701,9 @@ class UploadWizard {
 
     const processedTrack = this.getTrackPoints();
     if (processedTrack.length < 2) return alert('Please keep at least two samples with valid GPS coordinates after trimming.');
+    if (this.systems.filter((system) => system.includeVideo).length === 0 || this.systems.filter((system) => system.includeControl).length === 0) {
+      return alert('Choose at least one system for Video and one for Control before publishing.');
+    }
 
     let trackId = document.getElementById('track').value;
     if (trackId === '__new__') {

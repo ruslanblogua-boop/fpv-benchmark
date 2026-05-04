@@ -19,9 +19,7 @@
       <div class="steps">
         <div class="step-indicator">
           <span class="step active" data-step="1">1. Files</span>
-          <span class="step" data-step="2">2. Map Setup</span>
-          <span class="step" data-step="3">3. Metadata</span>
-          <span class="step" data-step="4">4. Preview</span>
+          <span class="step" data-step="2">2. Metadata</span>
         </div>
       </div>
 
@@ -62,46 +60,40 @@
           <p class="hint" id="trim-summary">Trim away takeoff or landing samples before publishing.</p>
         </div>
 
+        <div class="panel trim-pilot-panel">
+          <div class="section-header">
+            <div>
+              <h3>Pilot Position</h3>
+              <p>Use the same map above to place the pilot marker. Click the map or drag the marker.</p>
+            </div>
+          </div>
+
+          <div class="pilot-grid">
+            <label>
+              Pilot Latitude
+              <input type="number" id="pilot-lat" step="0.00001" placeholder="52.18">
+            </label>
+
+            <label>
+              Pilot Longitude
+              <input type="number" id="pilot-lon" step="0.00001" placeholder="21.13">
+            </label>
+
+            <label class="pilot-grid-span">
+              Pilot Bearing (degrees)
+              <input type="number" id="pilot-bearing" min="0" max="360" step="1" placeholder="0">
+            </label>
+          </div>
+        </div>
+
         <div id="normalized-preview" class="panel file-preview"></div>
 
         <button id="step-1-next" class="btn btn-primary" disabled>Next</button>
       </div>
 
-      <!-- Step 2: Map Setup -->
+      <!-- Step 2: Metadata -->
       <div id="step-2" class="step-content">
-        <h2>Step 2: Map Setup</h2>
-        <p>Verify path and set pilot marker position/bearing.</p>
-
-        <div id="map-setup" class="map-container"></div>
-
-        <div class="control-panel">
-          <label>
-            Pilot Latitude
-            <input type="number" id="pilot-lat" step="0.00001" placeholder="52.18">
-          </label>
-
-          <label>
-            Pilot Longitude
-            <input type="number" id="pilot-lon" step="0.00001" placeholder="21.13">
-          </label>
-
-          <label>
-            Pilot Bearing (degrees)
-            <input type="number" id="pilot-bearing" min="0" max="360" step="1" placeholder="0">
-          </label>
-
-          <p class="hint">Click on map to set pilot position</p>
-        </div>
-
-        <div class="button-group">
-          <button id="step-2-back" class="btn">Back</button>
-          <button id="step-2-next" class="btn btn-primary">Next</button>
-        </div>
-      </div>
-
-      <!-- Step 3: Metadata -->
-      <div id="step-3" class="step-content">
-        <h2>Step 3: Test Metadata</h2>
+        <h2>Step 2: Test Metadata</h2>
 
         <div class="panel">
           <h3>Benchmarks Created</h3>
@@ -238,23 +230,7 @@
         </label>
 
         <div class="button-group">
-          <button id="step-3-back" class="btn">Back</button>
-          <button id="step-3-next" class="btn btn-primary">Next</button>
-        </div>
-      </div>
-
-      <!-- Step 4: Preview -->
-      <div id="step-4" class="step-content">
-        <h2>Step 4: Preview</h2>
-
-        <div id="map-preview" class="map-container"></div>
-
-        <div id="preview-info" class="panel">
-          <!-- Summary stats shown here -->
-        </div>
-
-        <div class="button-group">
-          <button id="step-4-back" class="btn">Back</button>
+          <button id="step-2-back" class="btn">Back</button>
           <button id="publish-draft" class="btn">Save as Draft</button>
           <button id="publish-live" class="btn btn-primary">Publish</button>
         </div>
