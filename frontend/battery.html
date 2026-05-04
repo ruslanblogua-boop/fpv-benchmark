@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battery Tests — fpv-heatmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <a href="/" class="topbar-logo">fpv-heatmap</a>
+    </div>
+
+    <div class="topbar-categories">
+      <a href="/" class="topbar-link">Link Quality</a>
+      <a href="/camera.html" class="topbar-link">Camera</a>
+      <a href="/battery.html" class="topbar-link active">Battery</a>
+    </div>
+
+    <div class="topbar-actions">
+      <a href="/upload.html" class="topbar-link topbar-upload">+ New Test</a>
+      <button id="topbar-login" class="topbar-link">Login</button>
+      <a href="/settings.html" class="topbar-link topbar-icon" title="Settings">⚙</a>
+    </div>
+  </nav>
+
+  <main class="placeholder-page">
+    <section class="placeholder-card panel">
+      <div class="eyebrow">Coming Next</div>
+      <h1>Battery Test Explorer</h1>
+      <p>This page will host battery benchmark placeholders for sag, pack temperature, discharge curves, hover throttle, and weight-normalized endurance. Tested datasets will be shown first, with future simulated entries clearly labeled.</p>
+      <div class="placeholder-grid">
+        <article class="placeholder-tile">
+          <h3>Under Construction</h3>
+          <p>Expect placeholder data first, then a real viewer that can suggest batteries from saved drone profiles.</p>
+        </article>
+        <article class="placeholder-tile">
+          <h3>Planned Filters</h3>
+          <p>Cell count, capacity, pack chemistry, hover throttle, and tested versus simulated source labels.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if (window.supabase && window.supabase.createClient) {
+      window.createClient = window.supabase.createClient;
+    }
+  </script>
+  <script src="js/api.js?v=20260504-2"></script>
+  <script src="js/auth.js?v=20260504-2"></script>
+</body>
+</html>

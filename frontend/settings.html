@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — fpv-heatmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <a href="/" class="topbar-logo">fpv-heatmap</a>
+    </div>
+
+    <div class="topbar-categories">
+      <a href="/" class="topbar-link">Link Quality</a>
+      <a href="/camera.html" class="topbar-link">Camera</a>
+      <a href="/battery.html" class="topbar-link">Battery</a>
+    </div>
+
+    <div class="topbar-actions">
+      <a href="/upload.html" class="topbar-link topbar-upload">+ New Test</a>
+      <button id="topbar-login" class="topbar-link">Login</button>
+      <a href="/settings.html" class="topbar-link topbar-icon active" title="Settings">⚙</a>
+    </div>
+  </nav>
+
+  <div id="app" class="profile-container settings-page">
+    <header class="header page-header">
+      <div>
+        <div class="eyebrow">Settings</div>
+        <h1>Profile Data</h1>
+      </div>
+      <a href="/">← Back to Viewer</a>
+    </header>
+
+    <div class="content settings-layout">
+      <section class="panel user-info">
+        <h2>Account</h2>
+        <p>Keep your public pilot name and reusable bench profiles in one place. More settings can live here later.</p>
+        <label>
+          Display Name
+          <input type="text" id="display-name" placeholder="Your name">
+        </label>
+        <div class="button-group compact-actions">
+          <button id="save-name" class="btn btn-primary">Save</button>
+          <button id="logout" class="btn">Logout</button>
+        </div>
+      </section>
+
+      <section class="panel drone-profiles">
+        <div class="section-header">
+          <div>
+            <h2>Drone Profiles</h2>
+            <p>Reusable frame, electronics, and weight presets for quick uploads.</p>
+          </div>
+          <button id="add-profile" class="btn">Add Profile</button>
+        </div>
+
+        <div id="profile-list"></div>
+
+        <div class="new-profile-form hidden" id="new-profile-form">
+          <h3>New Profile</h3>
+          <label>Name <input type="text" id="new-name" required></label>
+          <label>Frame <input type="text" id="new-frame"></label>
+          <label>Motors <input type="text" id="new-motors"></label>
+          <label>FC <input type="text" id="new-fc"></label>
+          <label>VTX <input type="text" id="new-vtx"></label>
+          <label>Props <input type="text" id="new-props"></label>
+          <label>Weight (g) <input type="number" id="new-weight"></label>
+          <label>Notes <textarea id="new-notes"></textarea></label>
+          <div class="button-group compact-actions">
+            <button id="create-profile" class="btn btn-primary">Create</button>
+            <button id="cancel-profile" class="btn">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel my-tests-panel">
+        <div class="section-header">
+          <div>
+            <h2>My Tests</h2>
+            <p>Delete drafts or published tests you uploaded. These are the same profiles that feed your benchmark pages.</p>
+          </div>
+          <div class="settings-tabs">
+            <button class="tab active" data-filter="all">All</button>
+            <button class="tab" data-filter="draft">Drafts</button>
+            <button class="tab" data-filter="published">Published</button>
+          </div>
+        </div>
+
+        <div id="my-test-list" class="settings-test-list"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if (window.supabase && window.supabase.createClient) {
+      window.createClient = window.supabase.createClient;
+    }
+  </script>
+  <script src="js/api.js?v=20260504-2"></script>
+  <script src="js/auth.js?v=20260504-2"></script>
+  <script src="js/settings.js?v=20260504-2"></script>
+</body>
+</html>

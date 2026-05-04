@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Tests — fpv-heatmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <a href="/" class="topbar-logo">fpv-heatmap</a>
+    </div>
+
+    <div class="topbar-categories">
+      <a href="/" class="topbar-link">Link Quality</a>
+      <a href="/camera.html" class="topbar-link active">Camera</a>
+      <a href="/battery.html" class="topbar-link">Battery</a>
+    </div>
+
+    <div class="topbar-actions">
+      <a href="/upload.html" class="topbar-link topbar-upload">+ New Test</a>
+      <button id="topbar-login" class="topbar-link">Login</button>
+      <a href="/settings.html" class="topbar-link topbar-icon" title="Settings">⚙</a>
+    </div>
+  </nav>
+
+  <main class="camera-page">
+    <section class="camera-hero panel">
+      <div>
+        <div class="eyebrow">Camera Browser</div>
+        <h1>Standardized FPV Camera Combos</h1>
+        <p>Every entry represents a full end-to-end combo and includes both <strong>VTX DVR</strong> and <strong>VRX DVR</strong> whenever available, so pilots can compare what the aircraft records versus what the goggles actually receive. Latency sets live here too.</p>
+      </div>
+      <div id="camera-admin-entry" class="camera-admin-entry hidden">
+        <div class="eyebrow">Admin</div>
+        <a href="/camera-admin.html" class="btn btn-primary">Upload Camera Set</a>
+      </div>
+    </section>
+
+    <section class="camera-shell">
+      <aside class="camera-sidebar panel">
+        <div class="camera-tablist">
+          <button class="camera-tab active" data-tab="quality">Quality</button>
+          <button class="camera-tab" data-tab="low-light">Low Light</button>
+          <button class="camera-tab" data-tab="latency">Latency</button>
+        </div>
+
+        <label>
+          Search combo
+          <input id="camera-search" type="text" placeholder="Walksnail, HDZero, O3...">
+        </label>
+
+        <div class="camera-filter-notes">
+          <div class="eyebrow">Standard Set</div>
+          <p>All samples are grouped by full combo, not isolated parts, so you can compare complete video pipelines.</p>
+        </div>
+
+        <div id="camera-list" class="camera-list"></div>
+      </aside>
+
+      <section class="camera-main">
+        <div class="camera-compare-toolbar panel">
+          <div>
+            <div class="eyebrow">Comparison Mode</div>
+            <h2 id="camera-tab-title">Quality Comparison</h2>
+          </div>
+          <div class="camera-tool-pills">
+            <span class="tool-pill">Slider</span>
+            <span class="tool-pill">Zoom</span>
+            <span class="tool-pill">Exposure</span>
+          </div>
+        </div>
+
+        <div class="camera-stage panel">
+          <div class="camera-stage-header">
+            <div>
+              <div class="eyebrow">Active Pairing</div>
+              <h3 id="camera-stage-title">Select a combo</h3>
+            </div>
+            <div class="camera-badges" id="camera-stage-badges"></div>
+          </div>
+
+          <div class="camera-view-modes">
+            <button class="view-mode active" data-view="split">Split Compare</button>
+            <button class="view-mode" data-view="vtx">VTX DVR</button>
+            <button class="view-mode" data-view="vrx">VRX DVR</button>
+          </div>
+
+          <div class="camera-stage-grid">
+            <article class="camera-image-card">
+              <div class="camera-image-label">VTX DVR</div>
+              <div id="camera-vtx-frame" class="camera-image-frame placeholder-frame">Select a combo to preview the onboard recording.</div>
+            </article>
+            <article class="camera-image-card">
+              <div class="camera-image-label">VRX DVR</div>
+              <div id="camera-vrx-frame" class="camera-image-frame placeholder-frame">Select a combo to preview the goggles recording.</div>
+            </article>
+          </div>
+
+          <div id="camera-inspector" class="camera-inspector">
+            <div class="placeholder-card-inline">
+              <strong>Inspector tools</strong>
+              <span>The slider, zoom, and exposure tools are scaffolded in the UI and ready for real image datasets.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="camera-metadata panel" id="camera-metadata"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if (window.supabase && window.supabase.createClient) {
+      window.createClient = window.supabase.createClient;
+    }
+  </script>
+  <script src="js/api.js?v=20260504-4"></script>
+  <script src="js/auth.js?v=20260504-4"></script>
+  <script src="js/camera.js?v=20260504-4"></script>
+</body>
+</html>

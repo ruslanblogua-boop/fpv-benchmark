@@ -9,6 +9,7 @@ import { handleProfiles }      from './routes/profiles';
 import { handleTracks }        from './routes/tracks';
 import { handleTests }         from './routes/tests';
 import { handleUpload }        from './routes/upload';
+import { handleCamera }        from './routes/camera';
 import { verifyJWT, corsHeaders, jsonResponse, errorResponse } from './lib/utils';
 
 export interface Env {
@@ -36,6 +37,9 @@ router.get('/api/tests',          handleTests.list);    // filter by track/categ
 router.get('/api/tests/:id',      handleTests.get);
 router.get('/api/tests/:id/geojson/heatmap', handleTests.getHeatmap);  // proxy from R2
 router.get('/api/tests/:id/geojson/path',    handleTests.getPath);     // proxy from R2
+router.get('/api/camera-tests',   handleCamera.list);
+router.get('/api/camera-tests/:id', handleCamera.get);
+router.get('/api/camera-tests/:id/assets/:kind', handleCamera.getAsset);
 
 // ── Authenticated routes ──────────────────────────────────────────────────────
 router.post('/api/auth/sync',             withAuth, handleAuth.sync);     // sync Supabase user to D1
@@ -55,6 +59,8 @@ router.delete('/api/tests/:id',          withAuth, handleTests.remove);
 
 router.post('/api/upload/heatmap',       withAuth, handleUpload.heatmap); // upload heatmap GeoJSON to R2
 router.post('/api/upload/path',          withAuth, handleUpload.path);    // upload path GeoJSON to R2
+router.post('/api/camera-tests',         withAuth, handleCamera.create);
+router.delete('/api/camera-tests/:id',   withAuth, handleCamera.remove);
 
 // ── Admin routes ──────────────────────────────────────────────────────────────
 router.post('/api/tracks',               withAuth, handleTracks.create);

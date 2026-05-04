@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Upload — fpv-heatmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <a href="/" class="topbar-logo">fpv-heatmap</a>
+    </div>
+
+    <div class="topbar-categories">
+      <a href="/" class="topbar-link">Link Quality</a>
+      <a href="/camera.html" class="topbar-link active">Camera</a>
+      <a href="/battery.html" class="topbar-link">Battery</a>
+    </div>
+
+    <div class="topbar-actions">
+      <a href="/upload.html" class="topbar-link topbar-upload">+ New Test</a>
+      <button id="topbar-login" class="topbar-link">Login</button>
+      <a href="/settings.html" class="topbar-link topbar-icon" title="Settings">⚙</a>
+    </div>
+  </nav>
+
+  <main class="camera-page">
+    <section class="camera-hero panel">
+      <div>
+        <div class="eyebrow">Admin Upload</div>
+        <h1>Publish Camera Combo</h1>
+        <p>Upload a limited-quality standardized combo set with both onboard and goggles captures. Every entry is public once published.</p>
+      </div>
+      <a href="/camera.html" class="btn">Back to Camera Browser</a>
+    </section>
+
+    <section id="camera-admin-panel" class="panel camera-admin-form-panel">
+      <div id="camera-admin-status" class="camera-admin-status"></div>
+
+      <form id="camera-admin-form" class="camera-admin-form hidden">
+        <div class="camera-form-grid">
+          <label>
+            Tab
+            <select id="camera-tab-input" required>
+              <option value="quality">Quality</option>
+              <option value="low-light">Low Light</option>
+              <option value="latency">Latency</option>
+            </select>
+          </label>
+
+          <label>
+            Combo Name
+            <input id="camera-combo-name" type="text" placeholder="Walksnail Pro Kit + Goggles X" required>
+          </label>
+
+          <label>
+            Camera
+            <input id="camera-name" type="text" placeholder="Moonlight / Pro Camera">
+          </label>
+
+          <label>
+            VTX
+            <input id="camera-vtx-name" type="text" placeholder="Walksnail Pro Kit">
+          </label>
+
+          <label>
+            VRX
+            <input id="camera-vrx-name" type="text" placeholder="Goggles X">
+          </label>
+
+          <label>
+            Firmware
+            <input id="camera-firmware" type="text" placeholder="1.4.0 / 37.43.5">
+          </label>
+
+          <label>
+            Scene Name
+            <input id="camera-scene-name" type="text" placeholder="Daylight chart / dusk field">
+          </label>
+
+          <label>
+            Latency Method
+            <input id="camera-latency-method" type="text" placeholder="LED gate + 240fps capture">
+          </label>
+
+          <label class="camera-form-span">
+            Summary
+            <textarea id="camera-summary" rows="3" placeholder="What this standardized set is meant to show."></textarea>
+          </label>
+
+          <label class="camera-form-span">
+            Exposure Notes
+            <textarea id="camera-exposure-notes" rows="3" placeholder="ND, shutter, gain, goggles DVR mode, exposure notes."></textarea>
+          </label>
+
+          <label class="camera-form-span">
+            Tags
+            <input id="camera-tags" type="text" placeholder="Walksnail, Goggles X, daylight, tested">
+          </label>
+
+          <label class="camera-form-span">
+            Internal Notes
+            <textarea id="camera-notes" rows="3" placeholder="Optional notes stored alongside the dataset."></textarea>
+          </label>
+
+          <label>
+            VTX DVR Image
+            <input id="camera-vtx-file" type="file" accept="image/*" required>
+          </label>
+
+          <label>
+            VRX DVR Image
+            <input id="camera-vrx-file" type="file" accept="image/*" required>
+          </label>
+        </div>
+
+        <div class="button-group compact-actions">
+          <button type="submit" class="btn btn-primary">Publish Camera Combo</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if (window.supabase && window.supabase.createClient) {
+      window.createClient = window.supabase.createClient;
+    }
+  </script>
+  <script src="js/api.js?v=20260504-4"></script>
+  <script src="js/auth.js?v=20260504-4"></script>
+  <script src="js/camera.js?v=20260504-4"></script>
+</body>
+</html>

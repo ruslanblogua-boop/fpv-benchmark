@@ -60,7 +60,8 @@ class FPVApi {
   }
 
   async getMe() {
-    return this.request('GET', '/api/me');
+    const res = await this.request('GET', '/api/me');
+    return res.user || res;
   }
 
   async updateMe(updates) {
@@ -73,7 +74,8 @@ class FPVApi {
   }
 
   async getTrack(slug) {
-    return this.request('GET', `/api/tracks/${slug}`);
+    const res = await this.request('GET', `/api/tracks/${slug}`);
+    return res.track || res;
   }
 
   async createTrack(track) {
@@ -95,7 +97,8 @@ class FPVApi {
   }
 
   async getTest(id) {
-    return this.request('GET', `/api/tests/${id}`);
+    const res = await this.request('GET', `/api/tests/${id}`);
+    return res.test || res;
   }
 
   async getTestHeatmap(id) {
@@ -124,6 +127,25 @@ class FPVApi {
 
   async deleteTest(id) {
     return this.request('DELETE', `/api/tests/${id}`);
+  }
+
+  // Camera tests
+  async getCameraTests(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return this.request('GET', `/api/camera-tests?${params}`);
+  }
+
+  async getCameraTest(id) {
+    const res = await this.request('GET', `/api/camera-tests/${id}`);
+    return res.camera_test || res;
+  }
+
+  async createCameraTest(payload) {
+    return this.request('POST', '/api/camera-tests', payload);
+  }
+
+  async deleteCameraTest(id) {
+    return this.request('DELETE', `/api/camera-tests/${id}`);
   }
 
   // Profiles

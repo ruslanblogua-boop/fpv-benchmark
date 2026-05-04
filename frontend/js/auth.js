@@ -123,7 +123,7 @@ class AuthManager {
   updateUI() {
     const loginBtn = document.getElementById('topbar-login');
     const uploadBtn = document.querySelector('.topbar-upload');
-    const profileBtn = document.querySelector('.controls a[href="/profile"]');
+    const profileBtn = document.querySelector('.controls a[href="/settings.html"]');
 
     if (this.user) {
       if (loginBtn) {
