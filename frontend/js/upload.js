@@ -111,6 +111,7 @@ class UploadWizard {
     startInput.value = String(this.trimStart);
     endInput.max = maxValue;
     endInput.value = String(this.trimEnd);
+    this.updateTrimRail();
   }
 
   onTrimInput(id, value) {
@@ -314,6 +315,24 @@ class UploadWizard {
       return `<span class="${classes.join(' ')}" style="width:${100 / total}%"></span>`;
     }).join('');
     document.getElementById('trim-timeline').innerHTML = segments;
+    this.updateTrimRail();
+  }
+
+  updateTrimRail() {
+    const total = Math.max(this.getRawTrack().length - 1, 1);
+    const startPct = (this.trimStart / total) * 100;
+    const endPct = (this.trimEnd / total) * 100;
+    const selection = document.getElementById('trim-selection-window');
+    const startLabel = document.getElementById('trim-start-label');
+    const endLabel = document.getElementById('trim-end-label');
+
+    if (selection) {
+      selection.style.left = `${startPct}%`;
+      selection.style.width = `${Math.max(endPct - startPct, 1)}%`;
+    }
+
+    if (startLabel) startLabel.textContent = `Start ${this.trimStart}`;
+    if (endLabel) endLabel.textContent = `End ${this.trimEnd}`;
   }
 
   renderNormalizedPreview() {

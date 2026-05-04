@@ -41,15 +41,20 @@
 
           <label>
             Timeline Preview
-            <div id="trim-timeline" class="trim-timeline"></div>
-            <div class="trim-slider-row">
-              <div class="trim-slider">
-                <span>Trim Start</span>
-                <input type="range" id="trim-start-range" min="0" max="0" step="1" value="0">
+            <div class="trim-rail-shell">
+              <div class="trim-rail-copy">
+                <span id="trim-start-label">Start 0</span>
+                <span id="trim-end-label">End 0</span>
               </div>
-              <div class="trim-slider">
-                <span>Trim End</span>
-                <input type="range" id="trim-end-range" min="0" max="0" step="1" value="0">
+              <div class="trim-rail-stage">
+                <div id="trim-timeline" class="trim-timeline"></div>
+                <div id="trim-selection-window" class="trim-selection-window"></div>
+                <input type="range" id="trim-start-range" class="trim-handle trim-handle-start" min="0" max="0" step="1" value="0">
+                <input type="range" id="trim-end-range" class="trim-handle trim-handle-end" min="0" max="0" step="1" value="0">
+              </div>
+              <div class="trim-rail-meta">
+                <span>Takeoff</span>
+                <span>Landing</span>
               </div>
             </div>
           </label>

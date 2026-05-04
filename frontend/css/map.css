@@ -648,23 +648,26 @@
 .test-detail-panel {
   left: 24px;
   bottom: 24px;
-  width: min(360px, calc(100vw - 48px));
-  border: 1px solid #2a303b;
-  border-radius: 18px;
-  background: rgba(18, 21, 27, 0.94);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+  width: min(390px, calc(100vw - 48px));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(9, 12, 18, 0.92), rgba(15, 18, 24, 0.97));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
 
 #test-info h3 {
-  font-size: 18px;
-  line-height: 1.2;
+  font-size: 24px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
 }
 
 #test-info dl {
   display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 0.45rem 0.75rem;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
   font-family: inherit;
 }
 
@@ -675,6 +678,22 @@
 
 #test-info dt {
   color: #8d95a5;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+#test-info dd {
+  color: #eef2f7;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+#test-info dl > div,
+#test-info dl > section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .compare-card {
@@ -696,7 +715,9 @@
 }
 
 .playback-controls {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem;
 }
 
 #playback-play {

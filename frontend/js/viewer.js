@@ -376,17 +376,20 @@ class HeatmapViewer {
   }
 
   extractPathCoordinates(geojson) {
-    const coordinates = [];
-    (geojson.features || []).forEach((feature) => {
-      if (feature.geometry?.type === 'LineString') {
-        feature.geometry.coordinates.forEach(([lon, lat]) => coordinates.push([lat, lon]));
-      }
-      if (feature.geometry?.type === 'Point') {
+    const lineFeatures = (geojson.features || []).filter((feature) => feature.geometry?.type === 'LineString');
+    if (lineFeatures.length > 0) {
+      return lineFeatures[0].geometry.coordinates
+        .map(([lon, lat]) => [lat, lon])
+        .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
+    }
+
+    return (geojson.features || [])
+      .filter((feature) => feature.geometry?.type === 'Point')
+      .map((feature) => {
         const [lon, lat] = feature.geometry.coordinates;
-        coordinates.push([lat, lon]);
-      }
-    });
-    return coordinates.filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
+        return [lat, lon];
+      })
+      .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
   }
 
   frameCurrentTest() {
@@ -400,11 +403,11 @@ class HeatmapViewer {
       <div class="eyebrow">Selected Test</div>
       <h3>${test.custom_name || test.auto_name || 'Untitled Test'}</h3>
       <dl>
-        <dt>Benchmark</dt><dd>${this.formatCategoryLabel(test.category)}</dd>
-        <dt>System</dt><dd>${test.system_under_test || 'Not specified'}</dd>
-        <dt>Track</dt><dd>${test.track_name || 'Unknown track'}</dd>
-        <dt>Duration</dt><dd>${test.duration_s ? `${Math.round(test.duration_s)}s` : 'Unknown'}</dd>
-        <dt>Distance</dt><dd>${test.total_distance_m ? `${Math.round(test.total_distance_m)}m` : 'Unknown'}</dd>
+        <div><dt>Benchmark</dt><dd>${this.formatCategoryLabel(test.category)}</dd></div>
+        <div><dt>System</dt><dd>${test.system_under_test || 'Not specified'}</dd></div>
+        <div><dt>Track</dt><dd>${test.track_name || 'Unknown track'}</dd></div>
+        <div><dt>Duration</dt><dd>${test.duration_s ? `${Math.round(test.duration_s)}s` : 'Unknown'}</dd></div>
+        <div><dt>Distance</dt><dd>${test.total_distance_m ? `${Math.round(test.total_distance_m)}m` : 'Unknown'}</dd></div>
       </dl>
     `;
   }
