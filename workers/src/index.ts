@@ -28,7 +28,6 @@ router.options('*', (req: IRequest, env: Env) =>
 
 // ── Public routes ─────────────────────────────────────────────────────────────
 router.get('/api/health',         () => jsonResponse({ ok: true, ts: Date.now() }));
-router.post('/api/auth/sync',     handleAuth.sync);     // sync Supabase user to D1
 
 router.get('/api/tracks',         handleTracks.list);
 router.get('/api/tracks/:slug',   handleTracks.get);
@@ -39,6 +38,7 @@ router.get('/api/tests/:id/geojson/heatmap', handleTests.getHeatmap);  // proxy 
 router.get('/api/tests/:id/geojson/path',    handleTests.getPath);     // proxy from R2
 
 // ── Authenticated routes ──────────────────────────────────────────────────────
+router.post('/api/auth/sync',             withAuth, handleAuth.sync);     // sync Supabase user to D1
 router.get('/api/me',                    withAuth, handleAuth.me);
 router.put('/api/me',                    withAuth, handleAuth.updateMe);
 
@@ -57,7 +57,7 @@ router.post('/api/upload/heatmap',       withAuth, handleUpload.heatmap); // upl
 router.post('/api/upload/path',          withAuth, handleUpload.path);    // upload path GeoJSON to R2
 
 // ── Admin routes ──────────────────────────────────────────────────────────────
-router.post('/api/tracks',               withAuth, withAdmin, handleTracks.create);
+router.post('/api/tracks',               withAuth, handleTracks.create);
 router.put('/api/tracks/:slug',          withAuth, withAdmin, handleTracks.update);
 router.post('/api/tracks/:slug/promote', withAuth, withAdmin, handleTracks.promote);
 
