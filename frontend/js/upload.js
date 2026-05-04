@@ -3,8 +3,7 @@
 class UploadWizard {
   constructor() {
     this.currentStep = 1;
-    this.heatmapData = null;
-    this.pathData = null;
+    this.uploadedTestData = null;
     this.mapSetup = null;
     this.metadata = null;
     this.systems = [];
@@ -46,8 +45,7 @@ class UploadWizard {
 
   attachEventListeners() {
     // Step 1: File upload
-    document.getElementById('file-heatmap').addEventListener('change', (e) => this.onHeatmapFileSelect(e));
-    document.getElementById('file-path').addEventListener('change', (e) => this.onPathFileSelect(e));
+    document.getElementById('file-test-json').addEventListener('change', (e) => this.onTestJsonSelect(e));
     document.getElementById('step-1-next').addEventListener('click', () => this.nextStep());
 
     // Step 2: Map setup
@@ -87,43 +85,104 @@ class UploadWizard {
     document.getElementById('publish-live').addEventListener('click', () => this.publishLive());
   }
 
-  onHeatmapFileSelect(e) {
+  onTestJsonSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        this.heatmapData = JSON.parse(evt.target.result);
-        document.getElementById('heatmap-preview').textContent = `✓ ${file.name} (${this.heatmapData.features?.length || 0} cells)`;
+        const parsed = JSON.parse(evt.target.result);
+        this.validateTestJson(parsed);
+        this.uploadedTestData = parsed;
+        document.getElementById('test-json-preview').textContent = `✓ ${file.name} (${this.uploadedTestData.track?.length || 0} samples)`;
         this.checkFilesReady();
       } catch (err) {
-        alert('Invalid GeoJSON: ' + err.message);
+        this.uploadedTestData = null;
+        document.getElementById('test-json-preview').textContent = '';
+        alert('Invalid test JSON: ' + err.message);
       }
     };
     reader.readAsText(file);
   }
 
-  onPathFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        this.pathData = JSON.parse(evt.target.result);
-        document.getElementById('path-preview').textContent = `✓ ${file.name} (${this.pathData.features?.length || 0} points)`;
-        this.checkFilesReady();
-      } catch (err) {
-        alert('Invalid GeoJSON: ' + err.message);
-      }
-    };
-    reader.readAsText(file);
+  validateTestJson(data) {
+    if (!data || typeof data !== 'object') {
+      throw new Error('JSON root must be an object');
+    }
+    if (!Array.isArray(data.track)) {
+      throw new Error('JSON must contain a track array');
+    }
+    if (data.track.length === 0) {
+      throw new Error('Track array cannot be empty');
+    }
   }
 
   checkFilesReady() {
     const btn = document.getElementById('step-1-next');
-    btn.disabled = !(this.heatmapData && this.pathData);
+    if (!this.uploadedTestData) {
+      document.getElementById('normalized-preview').innerHTML = '';
+      btn.disabled = true;
+      return;
+    }
+
+    this.applyUploadedDefaults();
+    this.renderNormalizedPreview();
+    btn.disabled = false;
+  }
+
+  getTrackPoints() {
+    if (!Array.isArray(this.uploadedTestData?.track)) return [];
+    return this.uploadedTestData.track.filter(point =>
+      point &&
+      Number.isFinite(point.lat) &&
+      Number.isFinite(point.lon)
+    );
+  }
+
+  getSystemByType(type) {
+    return this.systems.find(system => system.type === type) || null;
+  }
+
+  applyUploadedDefaults() {
+    if (!this.uploadedTestData) return;
+
+    const trackPoints = this.getTrackPoints();
+    const firstTrackPoint = trackPoints[0];
+
+    if (this.uploadedTestData.test_name) {
+      document.getElementById('test-name').value = this.uploadedTestData.test_name;
+    }
+
+    if (firstTrackPoint) {
+      if (!document.getElementById('pilot-lat').value) {
+        document.getElementById('pilot-lat').value = firstTrackPoint.lat.toFixed(5);
+      }
+      if (!document.getElementById('pilot-lon').value) {
+        document.getElementById('pilot-lon').value = firstTrackPoint.lon.toFixed(5);
+      }
+    }
+
+    const pilotBearing = this.uploadedTestData.pilot_bearing_deg;
+    if (Number.isFinite(pilotBearing) && !document.getElementById('pilot-bearing').value) {
+      document.getElementById('pilot-bearing').value = String(pilotBearing);
+    }
+  }
+
+  renderNormalizedPreview() {
+    const preview = document.getElementById('normalized-preview');
+    if (!this.uploadedTestData) {
+      preview.innerHTML = '';
+      return;
+    }
+
+    preview.innerHTML = `
+      <strong>Structured Test JSON Ready</strong>
+      <div>${this.uploadedTestData.test_name || 'Untitled Test'}</div>
+      <div>${this.uploadedTestData.track.length} track samples</div>
+      <div>${this.uploadedTestData.stats?.gps_samples ?? this.getTrackPoints().length} GPS samples</div>
+      <div>${this.uploadedTestData.captured_at || 'No capture date'}</div>
+    `;
   }
 
   populateTrackSelect(tracks) {
@@ -254,7 +313,9 @@ class UploadWizard {
     const trackName = trackSelect.selectedOptions[0]?.textContent || 'Unknown Track';
     const date = new Date().toISOString().split('T')[0];
     const autoName = `${systemStr} on ${trackName} — ${date}`;
-    document.getElementById('test-name').value = autoName;
+    if (!this.uploadedTestData?.test_name) {
+      document.getElementById('test-name').value = autoName;
+    }
   }
 
   nextStep() {
@@ -296,16 +357,12 @@ class UploadWizard {
       maxZoom: 19,
     }).addTo(this.map);
 
-    // Draw path
-    if (this.pathData && this.pathData.features) {
-      this.pathData.features.forEach(feature => {
-        if (feature.geometry.type === 'LineString') {
-          L.polyline(
-            feature.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
-            { color: 'cyan', weight: 2, opacity: 0.8 }
-          ).addTo(this.map);
-        }
-      });
+    const trackPoints = this.getTrackPoints();
+    if (trackPoints.length > 0) {
+      const latLngs = trackPoints.map(point => [point.lat, point.lon]);
+
+      L.polyline(latLngs, { color: 'cyan', weight: 2, opacity: 0.8 }).addTo(this.map);
+      this.map.fitBounds(latLngs, { padding: [30, 30] });
     }
 
     // Pilot marker
@@ -328,6 +385,7 @@ class UploadWizard {
   }
 
   renderPreview() {
+<<<<<<< HEAD
     // Initialize Leaflet map in step 4
     const mapContainer = document.getElementById('map-preview');
     if (this.previewMap) this.previewMap.remove();
@@ -475,6 +533,25 @@ class UploadWizard {
     const Δλ = ((lon2 - lon1) * Math.PI) / 180;
     const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+=======
+    const panel = document.getElementById('preview-info');
+    if (!this.uploadedTestData) {
+      panel.innerHTML = '<p>No uploaded test data available.</p>';
+      return;
+    }
+
+    panel.innerHTML = `
+      <h3>${this.uploadedTestData.test_name || 'Untitled Test'}</h3>
+      <dl>
+        <dt>Captured At</dt><dd>${this.uploadedTestData.captured_at || 'Unknown'}</dd>
+        <dt>Track Samples</dt><dd>${this.uploadedTestData.track.length}</dd>
+        <dt>GPS Samples</dt><dd>${this.uploadedTestData.stats?.gps_samples ?? this.getTrackPoints().length}</dd>
+        <dt>Flight Duration</dt><dd>${this.uploadedTestData.stats?.flight_duration_s ?? 0}s</dd>
+        <dt>Min Bitrate</dt><dd>${this.uploadedTestData.stats?.min_bitrate_mbps ?? 0}</dd>
+        <dt>Max Bitrate</dt><dd>${this.uploadedTestData.stats?.max_bitrate_mbps ?? 0}</dd>
+      </dl>
+    `;
+>>>>>>> fd76a07 (Simplify repo to website-only JSON upload flow)
   }
 
   async publishDraft() {
@@ -544,18 +621,16 @@ class UploadWizard {
         pilot_lat: parseFloat(document.getElementById('pilot-lat').value),
         pilot_lon: parseFloat(document.getElementById('pilot-lon').value),
         pilot_bearing_deg: parseInt(document.getElementById('pilot-bearing').value),
-        grid_size_m: parseFloat(document.getElementById('grid-size').value),
         wind_speed: document.getElementById('wind-speed').value || null,
         wind_direction: document.getElementById('wind-direction').value || null,
         notes: document.getElementById('notes').value || null,
+        prepared_test_json: this.uploadedTestData,
+        duration_s: this.uploadedTestData?.stats?.flight_duration_s || null,
+        total_distance_m: this.uploadedTestData?.track?.at(-1)?.distance_from_home_m || null,
       };
 
       // Create test record
       const test = await api.createTest(metadata);
-
-      // Upload GeoJSON files
-      await api.uploadHeatmap(test.id, this.heatmapData);
-      await api.uploadPath(test.id, this.pathData);
 
       // Publish if needed
       if (status === 'published') {

@@ -27,20 +27,16 @@
 
       <!-- Step 1: File Upload -->
       <div id="step-1" class="step-content active">
-        <h2>Step 1: Upload GeoJSON Files</h2>
-        <p>Select the processed files from your local track processor run.</p>
+        <h2>Step 1: Upload Test JSON</h2>
+        <p>Select the prepared structured JSON file for this test.</p>
 
         <div class="file-input-group">
-          <label>Heatmap GeoJSON</label>
-          <input type="file" id="file-heatmap" accept=".geojson,.json" required>
-          <div id="heatmap-preview" class="file-preview"></div>
+          <label>Structured Test JSON</label>
+          <input type="file" id="file-test-json" accept=".json" required>
+          <div id="test-json-preview" class="file-preview"></div>
         </div>
 
-        <div class="file-input-group">
-          <label>Path GeoJSON</label>
-          <input type="file" id="file-path" accept=".geojson,.json" required>
-          <div id="path-preview" class="file-preview"></div>
-        </div>
+        <div id="normalized-preview" class="panel file-preview"></div>
 
         <button id="step-1-next" class="btn btn-primary" disabled>Next</button>
       </div>
@@ -53,14 +49,6 @@
         <div id="map-setup" class="map-container"></div>
 
         <div class="control-panel">
-          <label>
-            Grid Size
-            <select id="grid-size">
-              <option value="0.5">0.5m (detail)</option>
-              <option value="1.0" selected>1.0m (fast)</option>
-            </select>
-          </label>
-
           <label>
             Pilot Latitude
             <input type="number" id="pilot-lat" step="0.00001" placeholder="52.18">

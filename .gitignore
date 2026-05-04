@@ -11,3 +11,8 @@ build/
 wrangler.toml.local
 *.geojson
 *.csv
+fpv-heatmap/
+Tests/
+tools/
+QUICK_SETUP_CHECKLIST.md
+SUPABASE_SETUP.md
